@@ -84,7 +84,6 @@ az_http_client_send_request(az_http_request const* request, az_http_response* re
   char protocol[6] {0};
   urlWorkCopy = request->_internal.url;
   
-  
   int32_t slashIndex = - 1;
   if (colonIndex != -1)
   {
@@ -127,7 +126,7 @@ az_http_client_send_request(az_http_request const* request, az_http_response* re
   httpClient->connectionKeepAlive();
   httpClient->noDefaultRequestHeaders();
 
-  Serial.println("Going to send http Request");
+  //Serial.println("Going to send http Request");
   
   // Try 3 times to connect
   for (int i = 0; i < 3; i++)
@@ -144,15 +143,9 @@ az_http_client_send_request(az_http_request const* request, az_http_response* re
   
   if (httpClient->connected())
   {
-
-    Serial.println(F("Socket is connected to"));
-    Serial.println(host.c_str());
-
     httpClient->beginRequest();
     httpClient->post(resource);
-    Serial.println(F("Resource: "));
-    Serial.println(resource);
-  
+    
     char name_buffer[MAX_HEADERNAME_LENGTH +2] {0};
     char value_buffer[MAX_HEADERVALUE_LENGTH +2] {0};
     az_span head_name = AZ_SPAN_FROM_BUFFER(name_buffer);
@@ -176,19 +169,9 @@ az_http_client_send_request(az_http_request const* request, az_http_response* re
     httpClient->endRequest();
     httpClient->beginBody();
   
-
-    // RoSchmi
-    // Printout the body (in one batch)
-    char buffer[900] {0};
-    az_span_to_str(buffer, 899, request->_internal.body);
-    Serial.println((char *)buffer);
-    httpClient->print((char *)buffer);
-
-
-
+  
+    // Printout the body in chunks to avoid allocation a large buffer)
     
-    // Printout the body (alternative using chunks to avoid allocating a large buffer)
-    /*
     int32_t maxSliceLength = 50;
     int32_t currIndex = 0;
     int32_t charsToPrint = 0;
@@ -206,9 +189,6 @@ az_http_client_send_request(az_http_request const* request, az_http_response* re
         httpClient->print((char *)buf);      
       } 
     }
-    */
-
-     Serial.println("Printed body");
     
     if (az_span_is_content_equal(requMethod, AZ_SPAN_LITERAL_FROM_STR("POST")))
     { 
@@ -217,21 +197,12 @@ az_http_client_send_request(az_http_request const* request, az_http_response* re
 
       int httpCode = -1;
 
-      
-
       httpCode = httpClient->responseStatusCode();
-      
-      
-      
-      
-      Serial.print("Got response status code: ");
-      Serial.println(httpCode);
-        
+       
         char httpStatusLine[40] {0};
         if (httpCode > 0)  // Request was successful
-        { 
-          Serial.println("Response was successful");
-
+        {
+          
           sprintf((char *)httpStatusLine, "%s%i%s", "HTTP/1.1 ", httpCode, " ***\r\n");
          __unused az_result appendResult = az_http_response_append(ref_response, az_span_create_from_str((char *)httpStatusLine));
 
@@ -239,16 +210,13 @@ az_http_client_send_request(az_http_request const* request, az_http_response* re
 
           uint32_t start = millis();
 
-         // while((millis() - start) < 30)
-         // {}
-
-          while(httpClient->headerAvailable() && (millis() -  start) < 20)
+          while(httpClient->headerAvailable() && (millis() -  start) < 200)
           {
             char headerName[35] {0};
 
             getNextHeader((char *)headerName);   
             //String theName = httpClient->readHeaderName();
-            Serial.println(headerName);
+            
             for (int i = 0; i < targetHeadersCount; i++)
             {                   
                 if(strcmp((const char *)headerName, (const char *)headerKeys[i]) == 0)
@@ -261,56 +229,38 @@ az_http_client_send_request(az_http_request const* request, az_http_response* re
                 }
             }                        
           }
-
-          //httpClient->skipResponseHeaders();
-
+          // Add an empty line after the headers
           appendResult = az_http_response_append(ref_response, az_span_create_from_str((char *)"\r\n"));
-          
-         // char bodyBuffer[500] {0};
-          
-          int contLength = 0;
+        
+          int bodyLength = 0;
           uint32_t readBufferLenght = 51;
           uint8_t readBuffer[readBufferLenght] {0};
-          unsigned long timeoutStart = millis();
-
-        // Whilst we haven't timed out & haven't reached the end of the body
-        while ( (httpClient->connected() || httpClient->available()) &&
-                ((millis() - timeoutStart) < 5000) )
-        {
-          if (httpClient->available())
+          uint32_t timeoutStart = millis();
+          uint32_t timeOutLength = 5000;     // Initial timeoutlength is 5000 ms
+                    
+          // While we haven't timed out & haven't reached the end of the body
+          while ( (httpClient->connected() || httpClient->available()) &&
+                ((millis() - timeoutStart) < timeOutLength) )
           {
-            memset(readBuffer, 0, readBufferLenght);
-            uint32_t numRead = httpClient->read(readBuffer, readBufferLenght - 1);
-            appendResult = az_http_response_append(ref_response, az_span_create_from_str((char *)readBuffer));
-            Serial.println((char *)readBuffer);
+            if (httpClient->available())
+            {
+              memset(readBuffer, 0, readBufferLenght);  // Clear buffer
+              uint32_t numRead = httpClient->read(readBuffer, readBufferLenght - 1);
+              appendResult = az_http_response_append(ref_response, az_span_create_from_str((char *)readBuffer));
+              //Serial.println((char *)readBuffer);
+              bodyLength += numRead;
 
-            contLength += numRead;
-
-            // We read something, reset the timeout counter
-            timeoutStart = millis();
-          }
-          else
-          {
-            // We haven't got any data, so let's pause to allow some to
-            // arrive
-            delay(50);
-          }
-        }
-
-         // virtual int read(uint8_t *buf, size_t size);
-
-         // memcpy(bodyBuffer, (char *)(httpClient->responseBody()).c_str(), contLength);
-          
-
-          //bodyBufString = (char *)httpClient->responseBody().c_str();
-
-          //String theBody = httpClient->responseBody();
-          //Serial.println(theBody);
-          Serial.println("Finished Loop");    
-          //appendResult = az_http_response_append(ref_response, az_span_create_from_str((char *)"\r\n"));
-          //appendResult = az_http_response_append(ref_response, az_span_create_from_str((char *)httpClient->responseBody().c_str()));
-          //appendResult = az_http_response_append(ref_response, az_span_create_from_str((char *)bodyBuffer));
-          Serial.println("Sampled all headers");
+              // We read something, reset the timeout counter
+              timeoutStart = millis();
+              timeOutLength = 500;   // The next byte must arrive within 500 ms
+            }
+            else
+            {
+              // We haven't got any data, so let's pause to allow some to
+              // arrive
+              delay(100);
+            }
+          }        
         }
         else  // httpCode <= 0
         {
@@ -354,29 +304,7 @@ az_http_client_send_request(az_http_request const* request, az_http_response* re
           __unused az_result appendResult = az_http_response_append(ref_response, az_span_create_from_str((char *)httpStatusLine));
           appendResult = az_http_response_append(ref_response, az_span_create_from_str((char *)"\r\n"));
           appendResult = az_http_response_append(ref_response, az_span_create_from_str((char *)messageBuffer));
-        }
-     
-        // RoSchmi: For debugging
-        /*
-        char tempBuffer[700];
-        az_span content = AZ_SPAN_FROM_BUFFER(tempBuffer);
-
-        __unused az_http_response_get_body(ref_response, &content);
-
-        //  Here you can see the received payload in chunks 
-        // if you set a breakpoint in the loop 
-        
-        String payload = (char *)content._internal.ptr;
-        int indexCtr = 0;
-        int pageWidth = 50;
-        String partMessage;
-        while (indexCtr < payload.length())
-        {
-          partMessage = payload.substring(indexCtr, indexCtr + pageWidth);
-          indexCtr += pageWidth;
-        }
-        */
-        
+        }     
     }
     else
     {
@@ -389,7 +317,7 @@ az_http_client_send_request(az_http_request const* request, az_http_response* re
         // Not used
       } 
     }
-    //RoSchmi
+    //RoSchmi: Stop httpClient to free resources
     httpClient->stop();
   }
   else

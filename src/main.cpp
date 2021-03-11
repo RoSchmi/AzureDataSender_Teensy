@@ -1064,7 +1064,6 @@ az_http_status_code insertTableEntity(CloudStorageAccount *pAccountPtr, const ch
 
    // RoSchmi for tests: to simulate failed upload
   //az_http_status_code   statusCode = AZ_HTTP_STATUS_CODE_UNAUTHORIZED;
-  Serial.println(F("InsertRequest: has returned"));
   
   if ((statusCode == AZ_HTTP_STATUS_CODE_NO_CONTENT) || (statusCode == AZ_HTTP_STATUS_CODE_CREATED))
   {
@@ -1118,13 +1117,8 @@ az_http_status_code insertTableEntity(CloudStorageAccount *pAccountPtr, const ch
     #endif
 
     delay(1000);
-    
-    
-  }
   
-
-  delay(5000);
-  //az_http_status_code   statusCode = AZ_HTTP_STATUS_CODE_UNAUTHORIZED;
+  }
   return statusCode;
 }
 

@@ -159,8 +159,8 @@ AcceptType pAcceptType, ResponseType pResponseType, bool useSharedKeyLite)
 
   GetDateHeader(sysTime.getTime(), timestamp, x_ms_timestamp);
 
-  Serial.println(x_ms_timestamp);
-  Serial.println(timestamp);
+  //Serial.println(x_ms_timestamp);
+  //Serial.println(timestamp);
 
   String timestampUTC = timestamp;
   timestampUTC += ".0000000Z";
@@ -271,12 +271,10 @@ AcceptType pAcceptType, ResponseType pResponseType, bool useSharedKeyLite)
   
 
   initializeRequest(_ethernetClient, _ethernetHttpClient, _tAs, _numTAs);
-  Serial.println("Going to upload");
+  
 
   __unused az_result table_create_result =  az_storage_tables_upload(&tabClient, content_to_upload, az_span_create_from_str(md5Buffer), az_span_create_from_str((char *)authorizationHeaderBuffer), 
       az_span_create_from_str((char *)x_ms_timestamp), &uploadOptions, &http_response);
-
-      Serial.println("Reurned from upload");
 
   az_http_response_status_line statusLine;
 
@@ -527,8 +525,7 @@ AcceptType pAcceptType, ResponseType pResponseType, bool useSharedKeyLite)
         *outResponsHeaderDate = GetDateTimeFromDateHeader(headerValue);    
       }
     }
-    Serial.println("Return from TableClient Insert");
-    //httpClient->stop();
+    
     return statusLine.status_code; 
 }
 
@@ -628,6 +625,7 @@ void GetDateHeader(DateTime time, char * stamp, char * x_ms_time)
 
   dayOfWeek = dayOfWeek == 7 ? 0 : dayOfWeek;  // Switch Sunday, it comes as 7 and must be 0
 
+  /*
   struct mytm timeinfo {
                       (int)time.second(),
                       (int)time.minute(),
@@ -640,6 +638,7 @@ void GetDateHeader(DateTime time, char * stamp, char * x_ms_time)
                       (int)0};
 
   timeinfo.tm_mon =  (int)time.month() -1;
+  */
 
   char buf[35] = "DDD, DD MMM YYYY hh:mm:ss GMT";
   time.toString(buf);

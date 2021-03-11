@@ -40,8 +40,7 @@ void DataContainerWio::SetNewValue(uint32_t pIndex, DateTime pActDateTime, float
     {
         if (_lastSentTime.operator<=(pActDateTime.operator-(SendInterval)))
         {
-            _hasToBeSent = true;
-             Serial.println("Has to be sent was set true");
+            _hasToBeSent = true;     
         }       
     }   
 }

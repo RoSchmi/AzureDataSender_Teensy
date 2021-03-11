@@ -55,36 +55,13 @@ typedef enum
             dont_returnContent
         } ResponseType;
 
-struct mytm
-{
-  int	tm_sec;
-  int	tm_min;
-  int	tm_hour;
-  int	tm_mday;
-  int	tm_mon;
-  int	tm_year;
-  int	tm_wday;
-  int	tm_yday;
-  int	tm_isdst;
-};
-
-
 class TableClient
 {
 public:
 
 TableClient(CloudStorageAccount *account, Protocol protocol, br_x509_trust_anchor tAs, size_t numTA, EthernetClient * ethernet_client, EthernetSSLClient * ethernetSslClient, EthernetHttpClient * ethernetHttpClient);
 
-/*
-#if (USE_ENC28_ETHERNET == 1)
-    
-    #endif
 
-#if USE_ENC28_ETHERNET == 1
-
-    
-#endif
-*/
     ~TableClient();
     
     az_http_status_code CreateTable(const char * tableName, ContType pContentType = ContType::contApplicationIatomIxml, AcceptType pAcceptType = AcceptType::acceptApplicationIjson, ResponseType pResponseType = ResponseType::returnContent, bool useSharedKeyLight = false);
@@ -95,9 +72,7 @@ TableClient(CloudStorageAccount *account, Protocol protocol, br_x509_trust_ancho
 private:
 
 SysTime sysTime;
-//EthernetSSLClient * _ethernetClient = NULL;
-//WiFiClient* _wiFiClient = nullptr;
-//EthernetClient& _ethernetClient;
+
 };
 
 #include "TableClient_Impl.h"
