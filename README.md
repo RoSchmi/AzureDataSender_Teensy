@@ -5,3 +5,4 @@ This is work in progress, actually works but isn't tested over longer times
 
 For details how to use have a look on this projecgt
 https://github.com/RoSchmi/AzureDataSender_Wio_Terminal
+https://www.hackster.io/RoSchmi/wio-terminal-app-sending-sensor-data-to-azure-storage-tables-dbb08e
