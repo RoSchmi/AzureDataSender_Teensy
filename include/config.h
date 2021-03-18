@@ -22,7 +22,7 @@
 // The credentials of your WiFi router and the name and key of your
 // Azure Storage Account have to be set in the file config_secret.h 
 
-#define SENDINTERVAL_MINUTES  10         // Sendinterval in minutes, in this interval data are sent to the Cloud                                       
+#define SENDINTERVAL_MINUTES   1.0        // Sendinterval in minutes, in this interval data are sent to the Cloud                                       
                                               // is limited to be not below 1 second
 
 // Names for Tables in Azure Account, please obey rules for Azure Tablenames (e.g. no underscore allowed)
@@ -53,7 +53,7 @@
                                         // (Sensor readings are considered to be invalid if not successsfully
                                         // read within this timespan)
 
-#define NTP_UPDATE_INTERVAL_MINUTES 10   //  With this interval sytem time is updated via NTP
+#define NTP_UPDATE_INTERVAL_MINUTES 5   //  With this interval sytem time is updated via NTP
                                         //  with internet time (is limited to be not below 1 min)
 
 #define UPDATE_TIME_FROM_AZURE_RESPONSE 1  // 1 = yes, 0 = no. SystemTime is updated from the Post response from Azure.
@@ -89,7 +89,7 @@
 #define  DST_STOP_HOUR               3       // 0 - 23
        
 
-#define TRANSPORT_PROTOCOL 1     // 0 = http, 1 = https
+#define TRANSPORT_PROTOCOL 0     // 0 = http, 1 = https
                                  
 
 #define USE_WIFI_STATIC_IP 0     // 1 = use static IpAddress, 0 = use DHCP
@@ -104,7 +104,7 @@
                                         // 0 = a log with actions is shown on the screen
 
 #define USE_SIMULATED_SENSORVALUES   // Activates simulated sensor values (sinus curve) or (test values)
-//#define USE_TEST_VALUES              // Activates sending of test values (see Code in main.cpp)
+#define USE_TEST_VALUES              // Activates sending of test values (see Code in main.cpp)
                                        // if activated we select test values, not sinus curves
 
 #define SENSOR_1_OFFSET     0.0        // Calibration Offset to sensor No 1

@@ -454,7 +454,6 @@ void loop()
     digitalWrite(LED_BUILTIN, ledState);    // toggle LED to signal that App is running
 
 
-    //Serial.println(loopCounter % 10000);
 
     #if WORK_WITH_WATCHDOG == 1
       //SAMCrashMonitor::iAmAlive();
@@ -462,12 +461,12 @@ void loop()
     
     
     // Update RTC from Ntp when ntpUpdateInterval has expired
-    //if ((currentMillis - previousNtpMillis) >= ntpUpdateInterval)
+    if ((currentMillis - previousNtpMillis) >= ntpUpdateInterval)
     //if (timeClient.update())
-    if (false)
+    //if (false)
     {
        
-        //previousNtpMillis = currentMillis;
+        previousNtpMillis = currentMillis;
         dateTimeUTCNow = sysTime.getTime();
         uint32_t actRtcTime = dateTimeUTCNow.secondstime();
         
@@ -1039,7 +1038,7 @@ az_http_status_code insertTableEntity(CloudStorageAccount *pAccountPtr, const ch
   DateTime responseHeaderDateTime = DateTime();   // Will be filled with DateTime value of the resonse from Azure Service
 
   // Insert Entity
-  az_http_status_code statusCode = table.InsertTableEntity(pTableName, pTableEntity, (char *)outInsertETag, &responseHeaderDateTime, ContType::contApplicationIatomIxml, AcceptType::acceptApplicationIjson, ResponseType::returnContent, false);
+  az_http_status_code statusCode = table.InsertTableEntity(pTableName, pTableEntity, (char *)outInsertETag, &responseHeaderDateTime, ContType::contApplicationIatomIxml, AcceptType::acceptApplicationIjson, ResponseType::dont_returnContent, false);
   
   #if WORK_WITH_WATCHDOG == 1
       SAMCrashMonitor::iAmAlive();
@@ -1059,15 +1058,16 @@ az_http_status_code insertTableEntity(CloudStorageAccount *pAccountPtr, const ch
     
     #if UPDATE_TIME_FROM_AZURE_RESPONSE == 1    // System time shall be updated from the DateTime value of the response ?
     
-    dateTimeUTCNow = sysTime.getTime();
-    time_helpers.update(dateTimeUTCNow);
+    dateTimeUTCNow = sysTime.getTime();    
     uint32_t actRtcTime = dateTimeUTCNow.secondstime();
-    dateTimeUTCNow = responseHeaderDateTime;
-    sysTimeNtpDelta = actRtcTime - dateTimeUTCNow.secondstime();
-    sysTime.setTime(dateTimeUTCNow); 
+    dateTimeUTCNow = responseHeaderDateTime;                    // Get new time from the response
+    utcTime = timeClient.getUTCEpochTime();                     // Seconds since 1. Jan. 1970
+    sysTime.setTime(utcTime + SECONDS_FROM_1970_TO_2000);       // actualize SystemTime (RTC)
+    dateTimeUTCNow = sysTime.getTime();                         // actualize variable 'dateTimeUTCNow' from RTC
+    sysTimeNtpDelta = actRtcTime - dateTimeUTCNow.secondstime();// calculate the time deviation since the last actualization
     char buffer[] = "Azure-Utc: YYYY-MM-DD hh:mm:ss";
     dateTimeUTCNow.toString(buffer);
-    
+    Serial.println(buffer);
     
     #endif
     
