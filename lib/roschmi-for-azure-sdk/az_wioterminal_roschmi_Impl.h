@@ -126,7 +126,9 @@ az_http_client_send_request(az_http_request const* request, az_http_response* re
   httpClient->connectionKeepAlive();
   httpClient->noDefaultRequestHeaders();
 
-  //Serial.println("Going to send http Request");
+  Serial.println("Going to send http Request");
+  Serial.println((char *)host.c_str());
+  Serial.println(port);
   
   // Try 3 times to connect
   for (int i = 0; i < 3; i++)
@@ -137,7 +139,7 @@ az_http_client_send_request(az_http_request const* request, az_http_response* re
      }
      else
      {       
-       delay(200); 
+       delay(500); 
      }
   }
   

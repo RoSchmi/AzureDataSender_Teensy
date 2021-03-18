@@ -2,6 +2,32 @@
 // for Teensy 4.1
 // Copyright RoSchmi 2020, 2021. License Apache 2.0
 
+// Cave !!!!!
+// There are problems concerning  the Time.h library and C time.h library (which is additionally needed) on Teensy 4.1 
+// To reach that the C time.h is included go to:
+// C:\Users\User\.platformio\packages\framework-arduinoteensy\libraries\Time
+// and rename Time.h to Time.h_
+// https://forum.pjrc.com/threads/62357-TimLib-h-vs-Time-h
+
+// Cave !!!!!
+// Replace the Stream.h file in  C:/Users/thisUser/.platformio/packages/framework-arduinoteensy/cores/teensy4/Stream.h
+// with the custom version found in lib/RoSchmi/Stream 
+
+// Cave !!!!!
+// Go to C:\Users\thisuser\.platformio\packages\framework-arduinoteensy\libraries and replace the folders FNET and NativeEthernet
+// with the latest (18.03.2021) versions of -https://github.com/vjmuzik/NativeEthernet#master
+// and -https://github.com/vjmuzik/FNET#master
+// 
+// go to method: 'static fnet_bool_t _fnet_dns_cmp_name(const char *rr_name, const char *name)'
+// and change the code to ignore the result of this test    
+//    if(i == name_length)
+//    { result = FNET_TRUE; }    
+//    else
+//    {
+//        result = FNET_TRUE;
+//        //result = FNET_FALSE;
+//    }
+
 // Special files in folder include/:
 // defines.h:
 //     Defines settings which adapt Eternet- and SSL-libraries to Wio Terminal
@@ -30,23 +56,10 @@
   // which is fixed in this repo and was fixed in later versions of the Microsoft repo
 
 
-// Cave !!!!!
-// There are problems concerning  the Time.h library and C time.h library (which is additionally needed) on Teensy 4.1 
-// To reach that the C time.h is included go to:
-// C:\Users\User\.platformio\packages\framework-arduinoteensy\libraries\Time
-// and rename Time.h to Time.h_
-// https://forum.pjrc.com/threads/62357-TimLib-h-vs-Time-h
-
-// Cave:
-// Replace the Stream.h file in  C:/Users/thisUser/.platformio/packages/framework-arduinoteensy/cores/teensy4/Stream.h
-// with the custom version found in lib/RoSchmi/Stream 
-
 #include <Arduino.h>
 #include "defines.h"
 
-//#include "Stream.h"
 
-//#include "time_rs.h"
 #include "DateTime.h"
 #include "SysTime.h"
 #include "config.h"
@@ -96,9 +109,6 @@
 
 uint8_t lower_buffer[32];
 uint8_t upper_buffer[32] DMAMEM;
-
-
-  
 
 const char analogTableName[45] = ANALOG_TABLENAME;
 
@@ -159,8 +169,6 @@ uint32_t failedUploadCounter = 0;
 const int timeZoneOffset = (int)TIMEZONEOFFSET;
 const int dstOffset = (int)DSTOFFSET;
 
-//static EthernetClient  client;
-
 PrintClass printClass;
 
 // A UDP instance to let us send and receive packets over UDP
@@ -206,8 +214,6 @@ DateTime dateTimeUTCNow;    // Seconds since 2000-01-01 08:00:00
 
 Timezone myTimezone;
 
-//EthernetClient client;
-
 void setup(){
   /*
   uint8_t stack_buffer[32];
@@ -215,11 +221,8 @@ void setup(){
   heap_buffer = (uint32_t *)malloc(32);
   */
   
-  
-  
-  
   Serial.begin(115200);
-  while (!Serial);
+  //while (!Serial);
   
   /*
   delay(500);
@@ -270,10 +273,6 @@ void setup(){
   }
   */
 
-
-  //while (true);
-
-
   pinMode(LED_BUILTIN, OUTPUT);
   Serial.print("\nStart Ethernet_NTPClient_Basic on " + String(BOARD_NAME));
   Serial.println(" with " + String(SHIELD_TYPE));
@@ -310,19 +309,6 @@ void setup(){
   
   bool firstTimeZoneDef_is_Valid = (dstWeekday == -1 || dstMonth == - 1 || dstWeekOfMonth == -1 || DST_START_HOUR > 23 ? true : DST_START_HOUR < 0 ? true : false) ? false : true;
   
-  /*
-  if ((dstWeekday == -1 || dstMonth == - 1 || dstWeekOfMonth == -1 || DST_START_HOUR > 23 ? true : DST_START_HOUR < 0 ? true : false))
-  {
-    firstTimeZoneDef_is_Valid = false;
-
-    //myTimeZone.setRules(TimeChangeRule.)
-     //time_helpers.ruleDST(DST_ON_NAME, dstWeekOfMonth, dstWeekday, dstMonth, DST_START_HOUR, TIMEZONEOFFSET + DSTOFFSET);
-     //time_helpers.ruleDST("CEST", Last, Sun, Mar, 2, TIMEZONEOFFSET + DSTOFFSET); // e.g last sunday in march 2:00, timezone +120min (+1 GMT + 1h summertime offset) 
-  }
-  */
-
-
-
   dstWeekday = getDayNum(DST_STOP_WEEKDAY);
   dstMonth = getMonNum(DST_STOP_MONTH) + 1;
   dstWeekOfMonth = getWeekOfMonthNum(DST_STOP_WEEK_OF_MONTH);
@@ -351,11 +337,18 @@ void setup(){
   EthernetInit();
   #endif
 
-
-  
   // start the ethernet connection and the server:
   // Use DHCP dynamic IP and random mac
   uint16_t index = millis() % NUMBER_OF_MAC;
+
+  Ethernet.setSocketNum(4);
+  Ethernet.setSocketSize(1024 * 4);
+  
+  /*
+  uint8_t theDNS_Server_Ip[4] {8,8,8,8};
+  Ethernet.setDnsServerIP(theDNS_Server_Ip);
+  */
+
   // Use Static IP
   //Ethernet.begin(mac[index], ip);
   Serial.println(F("Starting DHCP"));
@@ -388,11 +381,6 @@ void setup(){
   // you're connected now, so print out the data
   Serial.print(F("You're connected to the network, IP = "));
   Serial.println(Ethernet.localIP());
-
- 
- //static EthernetSSLClient sslClient(client, TAs, (size_t)TAs_NUM);
- //EthernetSSLClient sslClient(client, TAs, (size_t)TAs_NUM);
-
 
   timeClient.begin();
   // default 60000 => 60s. Set to once per hour
@@ -453,15 +441,13 @@ void setup(){
   
   previousNtpMillis = millis();                                    
   
-  
-
 }
 
 
 void loop() 
 {
   
-  if (++loopCounter % 10000 == 0)   // Make decisions to send data every 1000 th round and toggle Led to signal that App is running
+  if (++loopCounter % 10000 == 0)   // Make decisions to send data every 10000 th round and toggle Led to signal that App is running
   {
     uint32_t currentMillis = millis();
     ledState = !ledState;
@@ -1124,7 +1110,8 @@ az_http_status_code insertTableEntity(CloudStorageAccount *pAccountPtr, const ch
 
 az_http_status_code createTable(CloudStorageAccount *pAccountPtr, const char * pTableName)
 { 
-  
+  Serial.println("Trying to create Table");
+
   static EthernetClient  client;
   
   //static EthernetSSLClient sslClient(client, TAs, (size_t)TAs_NUM, 1, EthernetSSLClient::SSL_DUMP);   // Define Log Level
@@ -1135,6 +1122,7 @@ az_http_status_code createTable(CloudStorageAccount *pAccountPtr, const char * p
   #if TRANSPORT_PROTOCOL == 1
     EthernetHttpClient  httpClient(sslClient, pAccountPtr->HostNameTable, (TRANSPORT_PROTOCOL == 0) ? 80 : 443);
   #else
+    //EthernetHttpClient  httpClient(sslClient, pAccountPtr->HostNameTable, (TRANSPORT_PROTOCOL == 0) ? 80 : 443);
     EthernetHttpClient  httpClient(client, pAccountPtr->HostNameTable, (TRANSPORT_PROTOCOL == 0) ? 80 : 443);
   #endif
   
@@ -1142,7 +1130,8 @@ az_http_status_code createTable(CloudStorageAccount *pAccountPtr, const char * p
       SAMCrashMonitor::iAmAlive();
   #endif
   
-  TableClient table(pAccountPtr, Protocol::useHttps, TAs[(size_t)TAs_NUM], (size_t)TAs_NUM, &client, &sslClient, &httpClient);
+  
+    TableClient table(pAccountPtr, Protocol::useHttps, TAs[(size_t)TAs_NUM], (size_t)TAs_NUM, &client, &sslClient, &httpClient);
   
   // Create Table
   az_http_status_code statusCode = table.CreateTable(pTableName, ContType::contApplicationIatomIxml, AcceptType::acceptApplicationIjson, ResponseType::dont_returnContent, false);
