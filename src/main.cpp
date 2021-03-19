@@ -29,8 +29,9 @@
 //    }
 
 // Special files in folder include/:
+// *********************************
 // defines.h:
-//     Defines settings which adapt Eternet- and SSL-libraries to Wio Terminal
+//     Defines settings which adapt Ethernet- and SSL-libraries to Teensy 4.1
 
 // trust_anchors.h:
 //     Holds Certificates to be used in SSL-libraries
@@ -47,7 +48,7 @@
 //      This file is a template for config_secret.h
 
 
-  // I started to make this App with the Azure Storage Blob Example as a template, see: 
+  // I started to make this App following the Azure Storage Blob Example as a template, see: 
   // https://github.com/Azure/azure-sdk-for-c/blob/5c7444dfcd5f0b3bcf3aec2f7b62639afc8bd664/sdk/samples/storage/blobs/src/blobs_client_example.c
 
   // The used Azure-sdk-for-c libraries were Vers. 1.1.0-beta.3
@@ -58,7 +59,6 @@
 
 #include <Arduino.h>
 #include "defines.h"
-
 
 #include "DateTime.h"
 #include "SysTime.h"
@@ -73,8 +73,6 @@
 #include "TableEntity.h"
 #include "AnalogTableEntity.h"
 #include "OnOffTableEntity.h"
-
-
 
 #include <NTPClient_Generic.h>
 
@@ -92,8 +90,8 @@
 
 #include "az_wioterminal_roschmi.h"
 
-#include <stdio.h>
-#include <stdlib.h>
+//#include <stdio.h>
+//#include <stdlib.h>
 
 #include "azure/core/az_platform.h"
 #include "azure/core/az_http.h"
@@ -104,8 +102,6 @@
 #include "azure/core/az_span.h"
 
 #include "Rs_time_helpers.h"
-
-#include "PrintClass.h"
 
 uint8_t lower_buffer[32];
 uint8_t upper_buffer[32] DMAMEM;
@@ -169,7 +165,6 @@ uint32_t failedUploadCounter = 0;
 const int timeZoneOffset = (int)TIMEZONEOFFSET;
 const int dstOffset = (int)DSTOFFSET;
 
-PrintClass printClass;
 
 // A UDP instance to let us send and receive packets over UDP
 EthernetUDP ntpUDP;
@@ -276,7 +271,6 @@ void setup(){
   pinMode(LED_BUILTIN, OUTPUT);
   Serial.print("\nStart Ethernet_NTPClient_Basic on " + String(BOARD_NAME));
   Serial.println(" with " + String(SHIELD_TYPE));
-  printClass.begin();
 
   onOffDataContainer.begin(DateTime(), OnOffTableName_1, OnOffTableName_2, OnOffTableName_3, OnOffTableName_4);
   // Initialize State of 4 On/Off-sensor representations 
@@ -349,10 +343,13 @@ void setup(){
   Ethernet.setDnsServerIP(theDNS_Server_Ip);
   */
 
-  // Use Static IP
-  //Ethernet.begin(mac[index], ip);
+  IPAddress ip = {192, 168, 1, 106};
+  
+  #if USE_STATIC_IP
+  Ethernet.begin(mac[index], ip);
+  #else
   Serial.println(F("Starting DHCP"));
-  if (Ethernet.begin(mac[index]) != 1) 
+  if (Ethernet.begin(mac[index]) != 1)
   {
     while (true) 
     {
@@ -360,6 +357,8 @@ void setup(){
       delay(5000); // do nothing, no point running without Ethernet hardware
     }
   }
+  #endif
+  
 
   // Just info to know how to connect correctly
   Serial.println(F("========================="));

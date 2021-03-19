@@ -6,7 +6,6 @@
 *
 ## then: only include these files
 !.gitignore
-!Free_Fonts.h
 !config_secret_template.h
 !config.h
 !defines.h
