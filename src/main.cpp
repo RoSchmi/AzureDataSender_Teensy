@@ -150,10 +150,10 @@ uint32_t tryUploadCounter = 0;
 uint32_t timeNtpUpdateCounter = 0;
 volatile int32_t sysTimeNtpDelta = 0;
 
-volatile uint32_t previousNtpMillis = 0;
+//volatile uint32_t previousNtpMillis = 0;
 volatile uint32_t previousSensorReadMillis = 0;
 
-uint32_t ntpUpdateInterval = 60000;
+//uint32_t ntpUpdateInterval = 60000;
 
 bool ledState = false;
 uint8_t lastResetCause = -1;
@@ -203,7 +203,7 @@ int getWeekOfMonthNum(const char * weekOfMonth);
 
 NTPClient timeClient(ntpUDP);
 
-unsigned long utcTime;      // Seconds since 1. Jan. 1970
+//unsigned long utcTime;      // Seconds since 1. Jan. 1970
 
 DateTime dateTimeUTCNow;    // Seconds since 2000-01-01 08:00:00
 
@@ -414,7 +414,7 @@ void setup(){
   Serial.println("UTC EPOCH : " + String(timeClient.getUTCEpochTime()));
   Serial.println("LOC EPOCH : " + String(timeClient.getEpochTime()));
 
-  utcTime = timeClient.getUTCEpochTime();  // Seconds since 1. Jan. 1970
+  unsigned long utcTime = timeClient.getUTCEpochTime();  // Seconds since 1. Jan. 1970
 
   sysTime.begin(utcTime + SECONDS_FROM_1970_TO_2000);
 
@@ -438,7 +438,7 @@ void setup(){
     augmentedAnalogTableName += (localTime.year());
   }
   
-  previousNtpMillis = millis();                                    
+  //previousNtpMillis = millis();                                    
   
 }
 
@@ -448,7 +448,7 @@ void loop()
   
   if (++loopCounter % 10000 == 0)   // Make decisions to send data every 10000 th round and toggle Led to signal that App is running
   {
-    uint32_t currentMillis = millis();
+    // uint32_t currentMillis = millis();
     ledState = !ledState;
     digitalWrite(LED_BUILTIN, ledState);    // toggle LED to signal that App is running
 
@@ -460,31 +460,24 @@ void loop()
     
     
     // Update RTC from Ntp when ntpUpdateInterval has expired
-    if ((currentMillis - previousNtpMillis) >= ntpUpdateInterval)
-    //if (timeClient.update())
-    //if (false)
+    //if ((currentMillis - previousNtpMillis) >= ntpUpdateInterval)
+    if (timeClient.update())    // only returns true if update interval has expired
     {
-       
-        previousNtpMillis = currentMillis;
+        //previousNtpMillis = currentMillis;
         dateTimeUTCNow = sysTime.getTime();
         uint32_t actRtcTime = dateTimeUTCNow.secondstime();
-        
-        //timeClient.update();
-
-        //if (timeClient.updated())
-        //{
-          //previousNtpMillis = currentMillis;
-          utcTime = timeClient.getUTCEpochTime();  // Seconds since 1. Jan. 1970
-          //sysTime.begin(utcTime + SECONDS_FROM_1970_TO_2000); 
-          sysTime.setTime(utcTime + SECONDS_FROM_1970_TO_2000);
-          dateTimeUTCNow = sysTime.getTime();
-          sysTimeNtpDelta = actRtcTime - dateTimeUTCNow.secondstime();
-          timeNtpUpdateCounter++;
-          Serial.println(F("NTP-Time was updated"));
-          char buffer[] = "NTP-Utc: YYYY-MM-DD hh:mm:ss";           
-          dateTimeUTCNow.toString(buffer);
-          Serial.println(buffer);
-        //}      
+        //previousNtpMillis = currentMillis;
+        unsigned long utcTime = timeClient.getUTCEpochTime();  // Seconds since 1. Jan. 1970
+        //sysTime.begin(utcTime + SECONDS_FROM_1970_TO_2000); 
+        sysTime.setTime(utcTime + SECONDS_FROM_1970_TO_2000);
+        dateTimeUTCNow = sysTime.getTime();
+        sysTimeNtpDelta = actRtcTime - dateTimeUTCNow.secondstime();
+        timeNtpUpdateCounter++;
+        Serial.println(F("NTP-Time was updated"));
+        char buffer[] = "NTP-Utc: YYYY-MM-DD hh:mm:ss";           
+        dateTimeUTCNow.toString(buffer);
+        Serial.println(buffer);
+          
     }
     else            // it was not NTP Update, proceed with send to analog table or On/Off-table
     {
@@ -1060,7 +1053,7 @@ az_http_status_code insertTableEntity(CloudStorageAccount *pAccountPtr, const ch
     dateTimeUTCNow = sysTime.getTime();    
     uint32_t actRtcTime = dateTimeUTCNow.secondstime();
     dateTimeUTCNow = responseHeaderDateTime;                    // Get new time from the response
-    utcTime = timeClient.getUTCEpochTime();                     // Seconds since 1. Jan. 1970
+    unsigned long utcTime = timeClient.getUTCEpochTime();                     // Seconds since 1. Jan. 1970
     sysTime.setTime(utcTime + SECONDS_FROM_1970_TO_2000);       // actualize SystemTime (RTC)
     dateTimeUTCNow = sysTime.getTime();                         // actualize variable 'dateTimeUTCNow' from RTC
     sysTimeNtpDelta = actRtcTime - dateTimeUTCNow.secondstime();// calculate the time deviation since the last actualization

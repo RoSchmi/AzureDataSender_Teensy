@@ -22,7 +22,7 @@
 // The credentials of your WiFi router (if needed) and the name and key of your
 // Azure Storage Account have to be set in the file config_secret.h 
 
-#define SENDINTERVAL_MINUTES   10            // Sendinterval in minutes, in this interval data are sent to the Cloud                                       
+#define SENDINTERVAL_MINUTES   0.5            // Sendinterval in minutes, in this interval data are sent to the Cloud                                       
                                               // is limited to be not below 1 second
 
 // Names for Tables in Azure Account, please obey rules for Azure Tablenames (e.g. no underscore allowed)
@@ -53,7 +53,7 @@
                                            // (Sensor readings are considered to be invalid if not successsfully
                                            // read within this timespan)
 
-#define NTP_UPDATE_INTERVAL_MINUTES 5      //  With this interval sytem time is updated via NTP
+#define NTP_UPDATE_INTERVAL_MINUTES 2      //  With this interval sytem time is updated via NTP
                                            //  with internet time (is limited to be not below 1 min)
 
 #define UPDATE_TIME_FROM_AZURE_RESPONSE 1  // 1 = yes, 0 = no. SystemTime is updated from the Post response from Azure.
