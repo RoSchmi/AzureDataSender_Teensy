@@ -74,7 +74,7 @@
 #include "AnalogTableEntity.h"
 #include "OnOffTableEntity.h"
 
-#include <NTPClient_Generic.h>
+#include "NTPClient_Generic.h"
 
 #include <NativeEthernet.h>
 #include "EthernetHttpClient_SSL.h"
@@ -101,7 +101,7 @@
 #include "azure/core/az_context.h"
 #include "azure/core/az_span.h"
 
-#include "Rs_time_helpers.h"
+#include "Rs_TimeNameHelper.h"
 
 uint8_t lower_buffer[32];
 uint8_t upper_buffer[32] DMAMEM;
@@ -172,7 +172,7 @@ EthernetUDP ntpUDP;
 // Class to access RTC, must be static
 static SysTime sysTime;
 
-Rs_time_helpers time_helpers;
+Rs_TimeNameHelper timeNameHelper;
 
 // Set transport protocol as defined in config.h
 static bool UseHttps_State = TRANSPORT_PROTOCOL == 0 ? false : true;
@@ -294,6 +294,7 @@ void setup(){
   // Setting Daylightsavingtime. Enter values for your zone in file include/config.h
   // Program aborts in some cases of invalid values
   //bool firstTimeZoneDef_is_Valid = true;
+
   int dstWeekday = getDayNum(DST_START_WEEKDAY);
   int dstMonth = getMonNum(DST_START_MONTH);
   int dstWeekOfMonth = getWeekOfMonthNum(DST_START_WEEK_OF_MONTH);
@@ -382,7 +383,7 @@ void setup(){
   Serial.println(Ethernet.localIP());
 
   timeClient.begin();
-  // default 60000 => 60s. Set to once per hour
+  
   timeClient.setUpdateInterval(NTP_UPDATE_INTERVAL_MINUTES * 60 * 1000);
   Serial.println("Using NTP Server " + timeClient.getPoolServerName());
   
@@ -401,7 +402,7 @@ void setup(){
   {
     while(true)
     {
-      delay(500); //Wait for ever
+      delay(500); //Wait for ever, could not get NTP time
     }
   }
   
@@ -462,13 +463,10 @@ void loop()
     // Update RTC from Ntp when ntpUpdateInterval has expired
     //if ((currentMillis - previousNtpMillis) >= ntpUpdateInterval)
     if (timeClient.update())    // only returns true if update interval has expired
-    {
-        //previousNtpMillis = currentMillis;
+    {       
         dateTimeUTCNow = sysTime.getTime();
-        uint32_t actRtcTime = dateTimeUTCNow.secondstime();
-        //previousNtpMillis = currentMillis;
-        unsigned long utcTime = timeClient.getUTCEpochTime();  // Seconds since 1. Jan. 1970
-        //sysTime.begin(utcTime + SECONDS_FROM_1970_TO_2000); 
+        uint32_t actRtcTime = dateTimeUTCNow.secondstime();       
+        unsigned long utcTime = timeClient.getUTCEpochTime();  // Seconds since 1. Jan. 1970    
         sysTime.setTime(utcTime + SECONDS_FROM_1970_TO_2000);
         dateTimeUTCNow = sysTime.getTime();
         sysTimeNtpDelta = actRtcTime - dateTimeUTCNow.secondstime();
@@ -484,17 +482,8 @@ void loop()
       dateTimeUTCNow = sysTime.getTime();
       
       // Get offset in minutes between UTC and local time with consideration of DST
-      //time_helpers.update(dateTimeUTCNow);
-      
       int timeZoneOffsetUTC = myTimezone.utcIsDST(dateTimeUTCNow.unixtime()) ? TIMEZONEOFFSET + DSTOFFSET : TIMEZONEOFFSET;
       
-      //Serial.println("timeZoneOffsetUTC:");
-      //Serial.println(timeZoneOffsetUTC);
-
-
-      //int timeZoneOffsetUTC = time_helpers.isDST() ? TIMEZONEOFFSET + DSTOFFSET : TIMEZONEOFFSET;
-      //DateTime localTime = dateTimeUTCNow.operator+(TimeSpan(timeZoneOffsetUTC * 60));
-
       DateTime localTime = myTimezone.toLocal(dateTimeUTCNow.unixtime());
 
   /*
@@ -523,8 +512,6 @@ void loop()
       if (onOffSwitcherWio.hasToggled(dateTimeUTCNow))
       {
         bool state = onOffSwitcherWio.GetState();
-        time_helpers.update(dateTimeUTCNow);
-        int timeZoneOffsetUTC = time_helpers.isDST() ? TIMEZONEOFFSET + DSTOFFSET : TIMEZONEOFFSET;
         onOffDataContainer.SetNewOnOffValue(0, state, dateTimeUTCNow, timeZoneOffsetUTC);
         onOffDataContainer.SetNewOnOffValue(1, !state, dateTimeUTCNow, timeZoneOffsetUTC);
       }
@@ -754,7 +741,7 @@ int getWeekOfMonthNum(const char * weekOfMonth)
 {
   for (int i = 0; i < 5; i++)
   {  
-    if (strcmp((char *)time_helpers.weekOfMonth[i], weekOfMonth) == 0)
+    if (strcmp((char *)timeNameHelper.weekOfMonth[i], weekOfMonth) == 0)
     {
       return i;
     }   
@@ -766,7 +753,7 @@ int getMonNum(const char * month)
 {
   for (int i = 0; i < 12; i++)
   {  
-    if (strcmp((char *)time_helpers.monthsOfTheYear[i], month) == 0)
+    if (strcmp((char *)timeNameHelper.monthsOfTheYear[i], month) == 0)
     {
       return i + 1;
     }   
@@ -778,7 +765,7 @@ int getDayNum(const char * day)
 {
   for (int i = 0; i < 7; i++)
   {  
-    if (strcmp((char *)time_helpers.daysOfTheWeek[i], day) == 0)
+    if (strcmp((char *)timeNameHelper.daysOfTheWeek[i], day) == 0)
     {
       return i + 1;
     }   
