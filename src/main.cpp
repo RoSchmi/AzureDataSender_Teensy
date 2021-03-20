@@ -103,6 +103,8 @@
 
 #include "Rs_TimeNameHelper.h"
 
+
+
 uint8_t lower_buffer[32];
 uint8_t upper_buffer[32] DMAMEM;
 
@@ -138,22 +140,20 @@ OnOffSwitcherWio onOffSwitcherWio;
 
 ImuManagerWio imuManagerWio;
 
-#define DEBUG 1
 
+// Do not delete
+/*
+#define DEBUG 1
 #define LOG_USB 1
 #define ACTLOGLEVEL = LOG_DEBUG_V3
 #define DebugLevel = SSL_INFO
+*/
 
 volatile uint32_t loopCounter = 0;
 unsigned int insertCounterAnalogTable = 0;
 uint32_t tryUploadCounter = 0;
 uint32_t timeNtpUpdateCounter = 0;
 volatile int32_t sysTimeNtpDelta = 0;
-
-//volatile uint32_t previousNtpMillis = 0;
-volatile uint32_t previousSensorReadMillis = 0;
-
-//uint32_t ntpUpdateInterval = 60000;
 
 bool ledState = false;
 uint8_t lastResetCause = -1;
@@ -181,35 +181,32 @@ CloudStorageAccount myCloudStorageAccount(AZURE_CONFIG_ACCOUNT_NAME, AZURE_CONFI
 CloudStorageAccount * myCloudStorageAccountPtr = &myCloudStorageAccount;
 
 // forward declarations
-//unsigned long getNTPtime();
-//unsigned long sendNTPpacket(EthernetUDP * udp, const char* address);
+
+
 String floToStr(float value);
 float ReadAnalogSensor(int pSensorIndex);
-//DateTime actualizeSysTimeFromNtp();
 void createSampleTime(DateTime dateTimeUTCNow, int timeZoneOffsetUTC, char * sampleTime);
 az_http_status_code  createTable(CloudStorageAccount * myCloudStorageAccountPtr, const char * tableName);
 az_http_status_code CreateTable( const char * tableName, ContType pContentType, AcceptType pAcceptType, ResponseType pResponseType, bool);
 az_http_status_code insertTableEntity(CloudStorageAccount *myCloudStorageAccountPtr, const char * pTableName, TableEntity pTableEntity, char * outInsertETag);
 void makePartitionKey(const char * partitionKeyprefix, bool augmentWithYear, DateTime dateTime, az_span outSpan, size_t *outSpanLength);
 void makeRowKey(DateTime actDate, az_span outSpan, size_t *outSpanLength);
-void showDisplayFrame();
-void fillDisplayFrame(double an_1, double an_2, double an_3, double an_4, bool on_1,  bool on_2, bool on_3, bool on_4, bool sendResultState, uint32_t tryUpLoadCtr);
 int getDayNum(const char * day);
 int getMonNum(const char * month);
 int getWeekOfMonthNum(const char * weekOfMonth);
 
 
-#define TIME_ZONE_OFFSET_HRS            (1)
+//#define TIME_ZONE_OFFSET_HRS            (1)
 
 NTPClient timeClient(ntpUDP);
-
-//unsigned long utcTime;      // Seconds since 1. Jan. 1970
 
 DateTime dateTimeUTCNow;    // Seconds since 2000-01-01 08:00:00
 
 Timezone myTimezone;
 
 void setup(){
+
+  // Used for debugging
   /*
   uint8_t stack_buffer[32];
   uint32_t * heap_buffer;
@@ -219,6 +216,7 @@ void setup(){
   Serial.begin(115200);
   //while (!Serial);
   
+  // Used for debugging, shows some memory areas
   /*
   delay(500);
   Serial.printf("Lower_Buffer: %x\n", (uint32_t)lower_buffer);
@@ -227,7 +225,7 @@ void setup(){
   Serial.printf("Heap Buffer : %x\n", (uint32_t)heap_buffer);
   */
 
-// This code snippet can be used to get the addresses of the heap
+  // This code snippet can be used to get the addresses of the heap
   // and to 
   //uint32_t * ptr_one;
   //uint32_t * last_ptr_one;
@@ -273,9 +271,9 @@ void setup(){
   Serial.println(" with " + String(SHIELD_TYPE));
 
   onOffDataContainer.begin(DateTime(), OnOffTableName_1, OnOffTableName_2, OnOffTableName_3, OnOffTableName_4);
+
   // Initialize State of 4 On/Off-sensor representations 
   // and of the inverter flags (Application specific)
-  
   for (int i = 0; i < 4; i++)
   {
     onOffDataContainer.PresetOnOffState(i, false, true);
@@ -293,13 +291,11 @@ void setup(){
 
   // Setting Daylightsavingtime. Enter values for your zone in file include/config.h
   // Program aborts in some cases of invalid values
-  //bool firstTimeZoneDef_is_Valid = true;
-
+  
   int dstWeekday = getDayNum(DST_START_WEEKDAY);
   int dstMonth = getMonNum(DST_START_MONTH);
   int dstWeekOfMonth = getWeekOfMonthNum(DST_START_WEEK_OF_MONTH);
 
-  
   TimeChangeRule dstStart {DST_ON_NAME, (uint8_t)dstWeekOfMonth, (uint8_t)dstWeekday, (uint8_t)dstMonth, DST_START_HOUR, TIMEZONEOFFSET + DSTOFFSET};
   
   bool firstTimeZoneDef_is_Valid = (dstWeekday == -1 || dstMonth == - 1 || dstWeekOfMonth == -1 || DST_START_HOUR > 23 ? true : DST_START_HOUR < 0 ? true : false) ? false : true;
@@ -339,14 +335,15 @@ void setup(){
   Ethernet.setSocketNum(4);
   Ethernet.setSocketSize(1024 * 4);
   
+  // Set DNS sever to your choice (if wanted)
   /*
   uint8_t theDNS_Server_Ip[4] {8,8,8,8};
   Ethernet.setDnsServerIP(theDNS_Server_Ip);
   */
 
-  IPAddress ip = {192, 168, 1, 106};
-  
   #if USE_STATIC_IP
+  // Set ip address of your choice
+  IPAddress ip = {192, 168, 1, 106};
   Ethernet.begin(mac[index], ip);
   #else
   Serial.println(F("Starting DHCP"));
@@ -360,7 +357,6 @@ void setup(){
   }
   #endif
   
-
   // Just info to know how to connect correctly
   Serial.println(F("========================="));
   Serial.println(F("Currently Used SPI pinout:"));
@@ -433,11 +429,13 @@ void setup(){
                                         localTime.hour() , localTime.minute());
   Serial.println("");
 
+  /*
   String augmentedAnalogTableName = analogTableName;  
   if (augmentTableNameWithYear)
   {
     augmentedAnalogTableName += (localTime.year());
   }
+  */
   
   //previousNtpMillis = millis();                                    
   
@@ -449,7 +447,7 @@ void loop()
   
   if (++loopCounter % 10000 == 0)   // Make decisions to send data every 10000 th round and toggle Led to signal that App is running
   {
-    // uint32_t currentMillis = millis();
+    
     ledState = !ledState;
     digitalWrite(LED_BUILTIN, ledState);    // toggle LED to signal that App is running
 
@@ -460,8 +458,7 @@ void loop()
     #endif
     
     
-    // Update RTC from Ntp when ntpUpdateInterval has expired
-    //if ((currentMillis - previousNtpMillis) >= ntpUpdateInterval)
+    // Update RTC from Ntp when ntpUpdateInterval has expired 
     if (timeClient.update())    // only returns true if update interval has expired
     {       
         dateTimeUTCNow = sysTime.getTime();
@@ -474,8 +471,7 @@ void loop()
         Serial.println(F("NTP-Time was updated"));
         char buffer[] = "NTP-Utc: YYYY-MM-DD hh:mm:ss";           
         dateTimeUTCNow.toString(buffer);
-        Serial.println(buffer);
-          
+        Serial.println(buffer);       
     }
     else            // it was not NTP Update, proceed with send to analog table or On/Off-table
     {
@@ -505,10 +501,8 @@ void loop()
       dataContainer.SetNewValue(2, dateTimeUTCNow, ReadAnalogSensor(2));
       dataContainer.SetNewValue(3, dateTimeUTCNow, ReadAnalogSensor(3));
 
-      
-
       // Check if automatic OnOfSwitcher has toggled (used to simulate on/off changes)
-      // and accordingly change the state of one representation (here index 2) in onOffDataContainer
+      // and accordingly change the state of one representation (here index 0 and 1) in onOffDataContainer
       if (onOffSwitcherWio.hasToggled(dateTimeUTCNow))
       {
         bool state = onOffSwitcherWio.GetState();
@@ -535,8 +529,7 @@ void loop()
         az_span rowKey = AZ_SPAN_FROM_BUFFER(rowKeySpan);
 
         if (dataContainer.hasToBeSent())       // have to send analog values ?
-        {
-          
+        {    
           // Retrieve edited sample values from container
           SampleValueSet sampleValueSet = dataContainer.getCheckedSampleValues(dateTimeUTCNow);
                   
@@ -549,14 +542,11 @@ void loop()
             augmentedAnalogTableName += (dateTimeUTCNow.year());     
           }
           
-          
-          
-          // Create table if table doesn't exist
-          if (localTime.year() != dataContainer.Year)
+          // Create Azure Storage Table if table doesn't exist
+          if (localTime.year() != dataContainer.Year)    // if new year
           {  
             az_http_status_code theResult = createTable(myCloudStorageAccountPtr, (char *)augmentedAnalogTableName.c_str());
-            
-          
+                     
             if ((theResult == AZ_HTTP_STATUS_CODE_CONFLICT) || (theResult == AZ_HTTP_STATUS_CODE_CREATED))
             {
               dataContainer.Set_Year(localTime.year());                   
@@ -564,7 +554,9 @@ void loop()
             else
             {
               // Reset board if not successful
-              //NVIC_SystemReset();     // ResetCause Code 64
+              //https://forum.pjrc.com/threads/59935-Reboot-Teensy-programmatically?p=232143&viewfull=1#post232143
+              //Reset Teensy 4.1
+             SCB_AIRCR = 0x05FA0004;             
             }                     
           }
           
@@ -593,13 +585,9 @@ void loop()
   
           // Create TableEntity consisting of PartitionKey, RowKey and the properties named 'SampleTime', 'T_1', 'T_2', 'T_3' and 'T_4'
           AnalogTableEntity analogTableEntity(partitionKey, rowKey, az_span_create_from_str((char *)sampleTime),  AnalogPropertiesArray, analogPropertyCount);
-     
-          // Print message on display
-              
-            sprintf(strData, "   Trying to insert %u", insertCounterAnalogTable);
-            Serial.println(strData);  
            
-        
+          sprintf(strData, "   Trying to insert %u", insertCounterAnalogTable);
+          Serial.println(strData);  
              
           // Keep track of tries to insert and check for memory leak
           insertCounterAnalogTable++;
@@ -664,6 +652,7 @@ void loop()
                  }
                  else
                  {
+
                     //NVIC_SystemReset();     // Makes Code 64
                  }
               }
@@ -988,39 +977,25 @@ az_http_status_code insertTableEntity(CloudStorageAccount *pAccountPtr, const ch
   //static EthernetSSLClient sslClient(client, TAs, (size_t)TAs_NUM, 1, EthernetSSLClient::SSL_DUMP);   // Define Log Level
   static EthernetSSLClient sslClient(client, TAs, (size_t)TAs_NUM);
   
-  
-  #if TRANSPORT_PROTOCOL == 1
-    
+  #if TRANSPORT_PROTOCOL == 1    
     EthernetHttpClient  httpClient(sslClient, pAccountPtr->HostNameTable, (TRANSPORT_PROTOCOL == 0) ? 80 : 443);
   #else
     EthernetHttpClient  httpClient(client, pAccountPtr->HostNameTable, (TRANSPORT_PROTOCOL == 0) ? 80 : 443);
   #endif
   
-
-  /*
-  // For tests: Try second upload with corrupted certificate to provoke failure
-  #if TRANSPORT_PROTOCOL == 1
-    wifi_client.setCACert(myX509Certificate);
-    if (insertCounterAnalogTable == 2)
-    {
-      wifi_client.setCACert(baltimore_corrupt_root_ca);
-    }
-  #endif
-  */
-
   TableClient table(pAccountPtr, (TRANSPORT_PROTOCOL == 0) ? Protocol::useHttp : Protocol::useHttps, TAs[(size_t)TAs_NUM], (size_t)TAs_NUM, &client, &sslClient, &httpClient);
 
   #if WORK_WITH_WATCHDOG == 1
-      SAMCrashMonitor::iAmAlive();
+      //SAMCrashMonitor::iAmAlive();
   #endif
   
-  DateTime responseHeaderDateTime = DateTime();   // Will be filled with DateTime value of the resonse from Azure Service
+  DateTime responseHeaderDateTime = DateTime();   // Will be filled with DateTime value of the response from Azure Service
 
   // Insert Entity
   az_http_status_code statusCode = table.InsertTableEntity(pTableName, pTableEntity, (char *)outInsertETag, &responseHeaderDateTime, ContType::contApplicationIatomIxml, AcceptType::acceptApplicationIjson, ResponseType::dont_returnContent, false);
   
   #if WORK_WITH_WATCHDOG == 1
-      SAMCrashMonitor::iAmAlive();
+      //SAMCrashMonitor::iAmAlive();
   #endif
 
   lastResetCause = 0;
@@ -1049,11 +1024,9 @@ az_http_status_code insertTableEntity(CloudStorageAccount *pAccountPtr, const ch
     Serial.println(buffer);
     
     #endif
-    
-
   }
   else            // request failed
-  {               // note: internal error codes from -1 to -4 were converted for tests to error codes 401 to 404 since
+  {               // note: ugly hack!! internal error codes from -1 to -4 were converted for tests to error codes 401 to 404 since
                   // negative values cannot be returned as 'az_http_status_code' 
 
     failedUploadCounter++;
@@ -1065,24 +1038,27 @@ az_http_status_code insertTableEntity(CloudStorageAccount *pAccountPtr, const ch
     #if REBOOT_AFTER_FAILED_UPLOAD == 1   // When selected in config.h -> Reboot through SystemReset after failed uoload
 
         #if TRANSPORT_PROTOCOL == 1
+          //https://forum.pjrc.com/threads/59935-Reboot-Teensy-programmatically?p=232143&viewfull=1#post232143
+
+            // Reset Teensy 4.1
+           SCB_AIRCR = 0x05FA0004;
           
-          NVIC_SystemReset();     // Makes Code 64
         #endif
         #if TRANSPORT_PROTOCOL == 0     // for http requests reboot after the second, not the first, failed request
           if(failedUploadCounter > 1)
           {
-            NVIC_SystemReset();     // Makes Code 64
+            // Reset Teensy 4.1
+            SCB_AIRCR = 0x05FA0004;        
           }
         #endif
 
     #endif
-
+    
     #if WORK_WITH_WATCHDOG == 1
-      SAMCrashMonitor::iAmAlive();   
+      //SAMCrashMonitor::iAmAlive();   
     #endif
 
     delay(1000);
-  
   }
   return statusCode;
 }
@@ -1096,53 +1072,42 @@ az_http_status_code createTable(CloudStorageAccount *pAccountPtr, const char * p
   //static EthernetSSLClient sslClient(client, TAs, (size_t)TAs_NUM, 1, EthernetSSLClient::SSL_DUMP);   // Define Log Level
   static EthernetSSLClient sslClient(client, TAs, (size_t)TAs_NUM);
 
-
-  
   #if TRANSPORT_PROTOCOL == 1
     EthernetHttpClient  httpClient(sslClient, pAccountPtr->HostNameTable, (TRANSPORT_PROTOCOL == 0) ? 80 : 443);
   #else
-    //EthernetHttpClient  httpClient(sslClient, pAccountPtr->HostNameTable, (TRANSPORT_PROTOCOL == 0) ? 80 : 443);
     EthernetHttpClient  httpClient(client, pAccountPtr->HostNameTable, (TRANSPORT_PROTOCOL == 0) ? 80 : 443);
   #endif
   
   #if WORK_WITH_WATCHDOG == 1
-      SAMCrashMonitor::iAmAlive();
+      //SAMCrashMonitor::iAmAlive();
   #endif
   
-  
-    TableClient table(pAccountPtr, Protocol::useHttps, TAs[(size_t)TAs_NUM], (size_t)TAs_NUM, &client, &sslClient, &httpClient);
+  TableClient table(pAccountPtr, Protocol::useHttps, TAs[(size_t)TAs_NUM], (size_t)TAs_NUM, &client, &sslClient, &httpClient);
   
   // Create Table
   az_http_status_code statusCode = table.CreateTable(pTableName, ContType::contApplicationIatomIxml, AcceptType::acceptApplicationIjson, ResponseType::dont_returnContent, false);
 
-  
-  
    // RoSchmi for tests: to simulate failed upload
   //az_http_status_code   statusCode = AZ_HTTP_STATUS_CODE_UNAUTHORIZED;
 
-  
-  char codeString[35] {0};
   if ((statusCode == AZ_HTTP_STATUS_CODE_CONFLICT) || (statusCode == AZ_HTTP_STATUS_CODE_CREATED))
   {
     #if WORK_WITH_WATCHDOG == 1
-      SAMCrashMonitor::iAmAlive();
+      //SAMCrashMonitor::iAmAlive();
     #endif
-    Serial.println("Table is availabel");
-    
+
+    Serial.println("Table is availabel");   
   }
   else
   {
     
-      Serial.println("Table Creation failed: ");
+    Serial.println("Table Creation failed: ");
     delay(1000);
-    //NVIC_SystemReset();     // Makes Code 64  
+    // Reset Teensy 4.1
+    SCB_AIRCR = 0x05FA0004;
+    
   }
-
-   delay(5000);
-   return statusCode;
-  
-//az_http_status_code   statusCode = AZ_HTTP_STATUS_CODE_UNAUTHORIZED;
-//return statusCode;
-
+  delay(1000);
+  return statusCode;
 }
 
