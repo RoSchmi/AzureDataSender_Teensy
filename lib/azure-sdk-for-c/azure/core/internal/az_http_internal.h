@@ -68,14 +68,10 @@ typedef struct
  * @brief Initialize _az_http_policy_telemetry_options with default values
  *
  */
-
 AZ_NODISCARD AZ_INLINE _az_http_policy_telemetry_options _az_http_policy_telemetry_options_default()
 {
-  // RoSchmi
-  return (_az_http_policy_telemetry_options){ .os = AZ_SPAN_FROM_STR("Unknown OS") };
-  //return (_az_http_policy_telemetry_options){};
+  return (_az_http_policy_telemetry_options){ .os = AZ_SPAN_FROM_STR("RS_Teensy41") };
 }
-
 
 // RoSchmi
 // Changed: .option_location must be the last member of the struct
@@ -91,6 +87,18 @@ _az_http_policy_apiversion_options_default()
                   .option_location = _az_http_policy_apiversion_option_location_header}
   };
 }
+
+/*
+AZ_NODISCARD AZ_INLINE _az_http_policy_apiversion_options
+_az_http_policy_apiversion_options_default()
+{
+  return (_az_http_policy_apiversion_options){
+    ._internal = { .option_location = _az_http_policy_apiversion_option_location_header,
+                   .name = AZ_SPAN_EMPTY,
+                   .version = AZ_SPAN_EMPTY }
+  };
+}
+*/
 
 /**
  * @brief Initialize az_http_policy_retry_options with default values

@@ -45,10 +45,10 @@
   // I started to make this App following the Azure Storage Blob Example as a template, see: 
   // https://github.com/Azure/azure-sdk-for-c/blob/5c7444dfcd5f0b3bcf3aec2f7b62639afc8bd664/sdk/samples/storage/blobs/src/blobs_client_example.c
 
-  // The used Azure-sdk-for-c libraries were Vers. 1.1.0-beta.3
-  // https://github.com/Azure/azure-sdk-for-c/releases/tag/1.1.0-beta.3
-  // In Vers. 1.1.0-beta.3 was a difficult to find bug in the file az_http_internal.h
-  // which is fixed in this repo and was fixed in later versions of the Microsoft repo
+  // The used Azure-sdk-for-c libraries were Vers. 1.1.0
+  // https://github.com/Azure/azure-sdk-for-c/releases/tag/1.1.0
+  // In Vers. 1.1.0 were some changes needed in the file az_http_internal.h
+  // the changes are included in this repo
 
 
 #include <Arduino.h>
@@ -99,8 +99,7 @@
 
 #include "Rs_TimeNameHelper.h"
 
-
-
+// only needed for tests
 uint8_t lower_buffer[32];
 uint8_t upper_buffer[32] DMAMEM;
 
@@ -193,15 +192,11 @@ int getDayNum(const char * day);
 int getMonNum(const char * month);
 int getWeekOfMonthNum(const char * weekOfMonth);
 
-
-//#define TIME_ZONE_OFFSET_HRS            (1)
-
 NTPClient timeClient(ntpUDP);
 
 DateTime dateTimeUTCNow;    // Seconds since 2000-01-01 08:00:00
 
 Timezone myTimezone;
-
 
 void watchDogCallback() {
   Serial.println(F("FEED THE DOG SOON, OR RESET!"));
@@ -327,7 +322,7 @@ void setup(){
 
   #if WORK_WITH_WATCHDOG == 1
     WDT_timings_t config;
-    config.trigger = 1; /* in seconds before reset occurs, 0->128 */
+    config.trigger = 1; /* seconds before reset occurs, 0->128 */
     config.timeout = 10; /* in seconds, 0->128 */
     config.callback = watchDogCallback;
     wdt.begin(config);
@@ -486,7 +481,6 @@ void setup(){
 
 }
 
-
 void loop() 
 {
   
@@ -496,11 +490,9 @@ void loop()
     ledState = !ledState;
     digitalWriteFast(LED_BUILTIN, ledState);    // toggle LED to signal that App is running
 
-    
     #if WORK_WITH_WATCHDOG == 1
       wdt.feed();
     #endif
-    
     
     // Update RTC from Ntp when ntpUpdateInterval has expired 
     if (timeClient.update())    // only returns true if update interval has expired
@@ -525,16 +517,6 @@ void loop()
       int timeZoneOffsetUTC = myTimezone.utcIsDST(dateTimeUTCNow.unixtime()) ? TIMEZONEOFFSET + DSTOFFSET : TIMEZONEOFFSET;
       
       DateTime localTime = myTimezone.toLocal(dateTimeUTCNow.unixtime());
-
-  /*
-  Serial.println("Local Time for request:");
-  
-  Serial.printf("%s %i %i %i %i %i", (char *)"Local-Time is:", localTime.year(), 
-                                        localTime.month() , localTime.day(),
-                                        localTime.hour() , localTime.minute());
-  
-  Serial.println("");
-  */
 
       // In the last 15 sec of each day we set a pulse to Off-State when we had On-State before
       bool isLast15SecondsOfDay = (localTime.hour() == 23 && localTime.minute() == 59 &&  localTime.second() > 45) ? true : false;
@@ -696,8 +678,9 @@ void loop()
                  }
                  else
                  {
-
-                    //NVIC_SystemReset();     // Makes Code 64
+                    delay(3000);
+                     //Reset Teensy 4.1
+                    SCB_AIRCR = 0x05FA0004;      
                  }
               }
               
@@ -763,9 +746,6 @@ void loop()
       }    
     } 
   }
-  //loopCounter++;
-  //delay(100);
-  //Serial.println("--");
 }         // End loop
 
 
@@ -892,7 +872,6 @@ float ReadAnalogSensor(int pSensorIndex)
                         theRead = lastResetCause;                        
                     }
                     */
-
 
                     // Read the accelerometer (not used here)
                     // First experiments, don't work well
