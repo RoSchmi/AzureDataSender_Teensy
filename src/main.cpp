@@ -2,18 +2,12 @@
 // for Teensy 4.1
 // Copyright RoSchmi 2020, 2021. License Apache 2.0
 
-// Cave !!!!!
-// There are problems concerning  the Time.h library and C time.h library (which is additionally needed) on Teensy 4.1 
-// To reach that the C time.h is included go to:
-// C:\Users\User\.platformio\packages\framework-arduinoteensy\libraries\Time
-// and rename Time.h to Time.h_
-// https://forum.pjrc.com/threads/62357-TimLib-h-vs-Time-h
 
 // Cave !!!!!
 // Replace the Stream.h file in  C:/Users/thisUser/.platformio/packages/framework-arduinoteensy/cores/teensy4/Stream.h
 // with the custom version found in lib/RoSchmi/Stream 
 
-// Cave !!!!!
+// Cave for !!!!!
 // Go to C:\Users\thisuser\.platformio\packages\framework-arduinoteensy\libraries and replace the folders FNET and NativeEthernet
 // with the latest (18.03.2021) versions of -https://github.com/vjmuzik/NativeEthernet#master
 // and -https://github.com/vjmuzik/FNET#master

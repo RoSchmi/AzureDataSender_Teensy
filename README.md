@@ -24,5 +24,5 @@ There are two hacks which are needed to achieve that this application works on t
       { result = FNET_TRUE; }    
       else {
       result = FNET_TRUE;
-      //result = FNET_FALSE;
+       //result = FNET_FALSE;
       }
