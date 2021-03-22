@@ -18,9 +18,6 @@ typedef struct
 }
 AnalogSensor;
 
-
-
-
 class AnalogSensorMgr
 {
     public:

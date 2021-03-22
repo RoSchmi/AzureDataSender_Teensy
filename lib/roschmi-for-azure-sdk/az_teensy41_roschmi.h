@@ -1,5 +1,5 @@
-#ifndef _AZ_WIO_TERMINAL_ROSCHMI_H_
-#define _AZ_WIO_TERMINAL_ROSCHMI_H_
+#ifndef _AZ_TEENSY41_ROSCHMI_H_
+#define _AZ_TEENSY41_ROSCHMI_H_
 
 
 #include <Arduino.h>
@@ -16,19 +16,10 @@
 
 #include "EthernetHttpClient_SSL.h"
 
-//#include "SSLClient/SSLClient.h"
-
-//#include "../include/defines.h"
-//#include "defines.h"
-
 #include "EthernetWebServer_SSL.h"
-//#include "HTTPClient.h"
-
 
 #define MAX_HEADERNAME_LENGTH 30
 #define MAX_HEADERVALUE_LENGTH 120
-
-
 
 // RoSchmi
 //static az_result dev_az_http_client_build_headers(
@@ -44,6 +35,6 @@ az_span header_name,
 az_span header_value,
 az_span separator);
 
-#include "az_wioterminal_roschmi_Impl.h"
+#include "az_teensy41_roschmi_Impl.h"
     
 #endif

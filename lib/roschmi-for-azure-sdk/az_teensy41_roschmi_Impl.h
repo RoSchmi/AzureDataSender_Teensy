@@ -5,7 +5,7 @@
 // Copyright (c) RoSchmi. All rights reserved.
 // SPDX-License-Identifier: MIT
 
-// The code of this file provides Wio Terminal specific solutions for the 'generic' function calls from
+// The code of this file provides Teensy 4.1 specific solutions for the 'generic' function calls from
 // the azure-sdk-for-c
 
 // These functions are:
@@ -14,15 +14,14 @@
 //    az_platform_sleep_msec(...)
 
 
-#include "az_wioterminal_roschmi.h"
+#include "az_teensy41_roschmi.h"
 #include "EthernetHttpClient_SSL.h"
 #include "Ethernet_HTTPClient/Ethernet_HttpClient.h"
 
 EthernetHttpClient * httpClient = NULL;
 EthernetClient * reqClient = NULL;
 EthernetSSLClient * reqSSLClient = NULL;
-//br_x509_trust_anchor reqTrustAnchors;
-//size_t reqNumTAs = 0;
+
 
 const char * PROGMEM mess1 = "-1 Connection refused\r\n\0";
 const char * PROGMEM mess2 = "-2 Send Header failed\r\n\0";
@@ -119,16 +118,14 @@ az_http_client_send_request(az_http_request const* request, az_http_response* re
 
   uint16_t port = (strcmp(protocol, (const char *)"http") == 0) ? 80 : 443;
 
-  //EthernetClient reqClient;
-  //EthernetClient * ptr = &reqClient;
-  //ptr = inClient;
-
   httpClient->connectionKeepAlive();
   httpClient->noDefaultRequestHeaders();
-
+  
+  /*
   Serial.println("Going to send http Request");
   Serial.println((char *)host.c_str());
   Serial.println(port);
+  */
   
   // Try 3 times to connect
   for (int i = 0; i < 3; i++)
@@ -172,7 +169,7 @@ az_http_client_send_request(az_http_request const* request, az_http_response* re
     httpClient->beginBody();
   
   
-    // Printout the body in chunks to avoid allocation a large buffer)
+    // Printout the body in chunks to avoid allocation of a large buffer)
     
     int32_t maxSliceLength = 50;
     int32_t currIndex = 0;
@@ -217,8 +214,7 @@ az_http_client_send_request(az_http_request const* request, az_http_response* re
             char headerName[35] {0};
 
             getNextHeader((char *)headerName);   
-            //String theName = httpClient->readHeaderName();
-            
+                
             for (int i = 0; i < targetHeadersCount; i++)
             {                   
                 if(strcmp((const char *)headerName, (const char *)headerKeys[i]) == 0)
@@ -338,12 +334,8 @@ az_http_client_send_request(az_http_request const* request, az_http_response* re
   return AZ_OK;
 }
 
-
-
-
 AZ_NODISCARD az_result az_platform_clock_msec(int64_t* out_clock_msec)
-{
-  
+{  
   int64_t clPerMico = clockCyclesPerMicrosecond() * 1000;
   out_clock_msec = &clPerMico;
   return AZ_OK;
@@ -372,8 +364,6 @@ void initializeRequest(EthernetClient * pReqClient, EthernetHttpClient * pEthern
 {
   reqClient = pReqClient;
   httpClient = pEthernetHttpClient;
-  //reqTrustAnchors = pTAs;
-  //reqNumTAs = pNumTAs;
 }
 
 /**

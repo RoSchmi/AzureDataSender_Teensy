@@ -136,15 +136,7 @@ TableClient::~TableClient()
 az_http_status_code TableClient::CreateTable(const char * tableName, ContType pContentType, 
 AcceptType pAcceptType, ResponseType pResponseType, bool useSharedKeyLite)
 {
-    /*
-    _ethernetHttpClient->connectionKeepAlive();
-     _ethernetHttpClient->noDefaultRequestHeaders();
-     char url[] = "prax47.table.core.windows.net";
-     volatile int connectResult = _ethernetHttpClient->connect((char *)url, 443);
-
-     volatile int dummy578 = 1; 
-    */
-
+    
    // limit length of tablename to max_tablename_length
    char * validTableName = (char *)tableName;
    if (strlen(tableName) >  MAX_TABLENAME_LENGTH)
@@ -155,12 +147,7 @@ AcceptType pAcceptType, ResponseType pResponseType, bool useSharedKeyLite)
   char x_ms_timestamp[35] {0};
   char timestamp[22] {0};
 
-  Serial.println("Getting header");
-
   GetDateHeader(sysTime.getTime(), timestamp, x_ms_timestamp);
-
-  //Serial.println(x_ms_timestamp);
-  //Serial.println(timestamp);
 
   String timestampUTC = timestamp;
   timestampUTC += ".0000000Z";
@@ -330,9 +317,6 @@ AcceptType pAcceptType, ResponseType pResponseType, bool useSharedKeyLite)
 
   const char * HttpVerb = "POST";
 
-  const __FlashStringHelper * p1 = (F("<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>"));
-  
-
   const __FlashStringHelper * li1 = (F("<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>"));
   const __FlashStringHelper * li2 = (F("<entry xmlns:d=\"http://schemas.microsoft.com/ado/2007/08/dataservices\"  "));
   const __FlashStringHelper * li3 = (F("xmlns:m=\"http://schemas.microsoft.com/ado/2007/08/dataservices/metadata\" "));    
@@ -355,33 +339,7 @@ AcceptType pAcceptType, ResponseType pResponseType, bool useSharedKeyLite)
         char * li20  = _properties;
   const __FlashStringHelper * li21  = (F("</m:properties></content></entry>"));
 
-  
-  
-  /*
-  const char * li1 = "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>";
-  const char * li2 = "<entry xmlns:d=\"http://schemas.microsoft.com/ado/2007/08/dataservices\"  ";
-  const char * li3 = "xmlns:m=\"http://schemas.microsoft.com/ado/2007/08/dataservices/metadata\" ";    
-  const char * li4  = "xmlns=\"http://www.w3.org/2005/Atom\"> <id>http://";
-        char * li5  = (char *)_accountPtr->AccountName.c_str();
-  const char * li6  = ".table.core.windows.net/";
-        char * li7  = (char *)validTableName;
-  const char * li8  = "(PartitionKey='";
-        char * li9  = (char *)PartitionKey; 
-  const char * li10  = "',RowKey='";
-        char * li11  = (char *)RowKey; 
-  const char * li12  = "')</id><title /><updated>";
-        char * li13  = (char *)x_ms_timestamp;
-  const char * li14  = "</updated><author><name /></author><content type=\"application/atom+xml\">";
-  const char * li15  = "<m:properties><d:PartitionKey>";
-        char * li16  = (char *)PartitionKey;
-  const char * li17  =  "</d:PartitionKey><d:RowKey>";
-        char * li18  = (char *)RowKey;
-  const char * li19  = "</d:RowKey>";  
-        char * li20  = _properties;
-  const char * li21  = "</m:properties></content></entry>";
-  */
-
-
+  // For debugging on Wio Terminal
   // Fills memory from 0x20029200 -  with pattern AA55
   // So you can see at breakpoints how much of heap was used
   /*
@@ -411,8 +369,7 @@ AcceptType pAcceptType, ResponseType pResponseType, bool useSharedKeyLite)
    uint8_t * remainderBufAddress = (uint8_t *)remainderBuffer;
    az_span remainder = az_span_create(remainderBufAddress, 900);
 
-            remainder = az_span_copy(startContent_to_upload, az_span_create_from_str((char *)p1));
-            //remainder = az_span_copy(startContent_to_upload, az_span_create_from_str((char *)li1));
+            remainder = az_span_copy(startContent_to_upload, az_span_create_from_str((char *)li1));          
             remainder = az_span_copy(remainder, az_span_create_from_str((char *)li2));
             remainder = az_span_copy(remainder, az_span_create_from_str((char *)li3));
             remainder = az_span_copy(remainder, az_span_create_from_str((char *)li4));
@@ -467,16 +424,9 @@ AcceptType pAcceptType, ResponseType pResponseType, bool useSharedKeyLite)
       //volatile int dummy643 = 1;    
   }
   
-  /*
-  // To save memory set buffer address to 0x2002A000
-   uint8_t * responseBufferAddr = (uint8_t *)RESPONSE_BUFFER_MEMORY_ADDR;
-  az_span response_az_span = az_span_create(responseBufferAddr, RESPONSE_BUFFER_LENGTH);
-  */
-
   uint8_t responseBuffer[RESPONSE_BUFFER_LENGTH] {0};
   az_span response_az_span = AZ_SPAN_FROM_BUFFER(responseBuffer);
 
-  
   az_http_response http_response;
   if (az_result_failed(az_http_response_init(&http_response, response_az_span)))
   {
@@ -489,10 +439,8 @@ AcceptType pAcceptType, ResponseType pResponseType, bool useSharedKeyLite)
   uploadOptions._internal.contentType = contentTypeAzSpan;
   uploadOptions._internal.perferType = responseTypeAzSpan;
 
-  
   initializeRequest(_ethernetClient, _ethernetHttpClient, _tAs, _numTAs);
   
-
   __unused az_result const entity_upload_result = 
     az_storage_tables_upload(&tabClient, content_to_upload, az_span_create_from_str(md5Buffer), az_span_create_from_str((char *)authorizationHeaderBuffer), az_span_create_from_str((char *)x_ms_timestamp), &uploadOptions, &http_response);
     
@@ -500,8 +448,6 @@ AcceptType pAcceptType, ResponseType pResponseType, bool useSharedKeyLite)
 
      __unused az_result result = az_http_response_get_status_line(&http_response, &statusLine);
      
-         
-
     az_span etagName = AZ_SPAN_FROM_STR("ETag");
     char keyBuf[20] {0};
     az_span headerKey = AZ_SPAN_FROM_BUFFER(keyBuf);
@@ -624,21 +570,6 @@ void GetDateHeader(DateTime time, char * stamp, char * x_ms_time)
   int32_t dayOfWeek = dow((int32_t)time.year(), (int32_t)time.month(), (int32_t)time.day());
 
   dayOfWeek = dayOfWeek == 7 ? 0 : dayOfWeek;  // Switch Sunday, it comes as 7 and must be 0
-
-  /*
-  struct mytm timeinfo {
-                      (int)time.second(),
-                      (int)time.minute(),
-                      (int)time.hour(),
-                      (int)time.day(),
-                      (int)time.month(),
-                      (int)(time.year() - 1900),                       
-                      (int)dayOfWeek,
-                      (int)0,                               
-                      (int)0};
-
-  timeinfo.tm_mon =  (int)time.month() -1;
-  */
 
   char buf[35] = "DDD, DD MMM YYYY hh:mm:ss GMT";
   time.toString(buf);

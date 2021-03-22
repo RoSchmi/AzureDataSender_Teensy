@@ -84,10 +84,7 @@
 #include "ImuManagerWio.h"
 #include "AnalogSensorMgr.h"
 
-#include "az_wioterminal_roschmi.h"
-
-//#include <stdio.h>
-//#include <stdlib.h>
+#include "az_teensy41_roschmi.h"
 
 #include "azure/core/az_platform.h"
 #include "azure/core/az_http.h"
