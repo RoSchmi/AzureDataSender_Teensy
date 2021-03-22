@@ -18,7 +18,7 @@
 // with the latest (18.03.2021) versions of -https://github.com/vjmuzik/NativeEthernet#master
 // and -https://github.com/vjmuzik/FNET#master
 // 
-// go to method: 'static fnet_bool_t _fnet_dns_cmp_name(const char *rr_name, const char *name)'
+// go to  FNET/src/service/dns/fnet_dns.c and change the method 'static fnet_bool_t _fnet_dns_cmp_name(const char *rr_name, const char *name)'
 // and change the code to ignore the result of this test    
 //    if(i == name_length)
 //    { result = FNET_TRUE; }    
@@ -58,6 +58,8 @@
 
 
 #include <Arduino.h>
+#include "Watchdog_t4.h"
+
 #include "defines.h"
 
 #include "DateTime.h"
@@ -140,6 +142,8 @@ OnOffSwitcherWio onOffSwitcherWio;
 
 ImuManagerWio imuManagerWio;
 
+WDT_T4<WDT1> wdt;
+
 
 // Do not delete
 /*
@@ -149,7 +153,7 @@ ImuManagerWio imuManagerWio;
 #define DebugLevel = SSL_INFO
 */
 
-volatile uint32_t loopCounter = 0;
+volatile uint64_t loopCounter = 0;
 unsigned int insertCounterAnalogTable = 0;
 uint32_t tryUploadCounter = 0;
 uint32_t timeNtpUpdateCounter = 0;
@@ -203,6 +207,11 @@ NTPClient timeClient(ntpUDP);
 DateTime dateTimeUTCNow;    // Seconds since 2000-01-01 08:00:00
 
 Timezone myTimezone;
+
+
+void watchDogCallback() {
+  Serial.println(F("FEED THE DOG SOON, OR RESET!"));
+}
 
 void setup(){
 
@@ -266,6 +275,13 @@ void setup(){
   }
   */
 
+  // Wait some time (3000 ms)
+  uint32_t start = millis();
+  while ((millis() - start) < 3000)
+  {
+    delay(10);
+  }
+
   pinMode(LED_BUILTIN, OUTPUT);
   Serial.print("\nStart Ethernet_NTPClient_Basic on " + String(BOARD_NAME));
   Serial.println(" with " + String(SHIELD_TYPE));
@@ -285,9 +301,43 @@ void setup(){
   onOffSwitcherWio.begin(TimeSpan(30 * 60));   // Toggle every 30 min
   onOffSwitcherWio.SetInactive();
   //onOffSwitcherWio.SetActive();
-  
-  // buffer to hold messages for display
+
+
+// buffer to hold messages
   char buf[100];
+
+// Save copy of Reset Status register 
+  lastResetCause = SRC_SRSR;
+
+  // Clear all reset status register bits with
+  SRC_SRSR = (uint32_t)0x7F;
+
+  // Print the last reset cause
+  Serial.println(F("Reset happened after:"));
+  if ((lastResetCause & SRC_SRSR_IPP_RESET_B) != 0) {
+    Serial.println(F("Power Reset."));
+  }
+
+  if ((lastResetCause & SRC_SRSR_LOCKUP_SYSRESETREQ) != 0) {
+    Serial.println(F("Software Reset."));
+  }
+
+  if ((lastResetCause & SRC_SRSR_WDOG_RST_B) !=0) {
+    Serial.println(F("Watchdog Reset."));
+  }
+  
+  Serial.print(F("Last state of 'ResetCause' Register: "));
+
+  sprintf(buf, "0x%08x", lastResetCause);
+  Serial.println(buf);
+
+  #if WORK_WITH_WATCHDOG == 1
+    WDT_timings_t config;
+    config.trigger = 1; /* in seconds before reset occurs, 0->128 */
+    config.timeout = 10; /* in seconds, 0->128 */
+    config.callback = watchDogCallback;
+    wdt.begin(config);
+  #endif
 
   // Setting Daylightsavingtime. Enter values for your zone in file include/config.h
   // Program aborts in some cases of invalid values
@@ -334,6 +384,10 @@ void setup(){
 
   Ethernet.setSocketNum(4);
   Ethernet.setSocketSize(1024 * 4);
+
+  #if WORK_WITH_WATCHDOG == 1
+    wdt.feed();
+  #endif
   
   // Set DNS sever to your choice (if wanted)
   /*
@@ -355,6 +409,10 @@ void setup(){
       delay(5000); // do nothing, no point running without Ethernet hardware
     }
   }
+  #endif
+
+  #if WORK_WITH_WATCHDOG == 1
+    wdt.feed();
   #endif
   
   // Just info to know how to connect correctly
@@ -391,6 +449,9 @@ void setup(){
   {
     Serial.println(F("NTP FAILED: Trying again"));
     delay(1000);
+    #if WORK_WITH_WATCHDOG == 1
+      wdt.feed();
+    #endif
     timeClient.update();
   }
 
@@ -429,32 +490,21 @@ void setup(){
                                         localTime.hour() , localTime.minute());
   Serial.println("");
 
-  /*
-  String augmentedAnalogTableName = analogTableName;  
-  if (augmentTableNameWithYear)
-  {
-    augmentedAnalogTableName += (localTime.year());
-  }
-  */
-  
-  //previousNtpMillis = millis();                                    
-  
 }
 
 
 void loop() 
 {
   
-  if (++loopCounter % 10000 == 0)   // Make decisions to send data every 10000 th round and toggle Led to signal that App is running
+  if (++loopCounter % 100000 == 0)   // Make decisions to send data every 100000 th round and toggle Led to signal that App is running
   {
     
     ledState = !ledState;
-    digitalWrite(LED_BUILTIN, ledState);    // toggle LED to signal that App is running
+    digitalWriteFast(LED_BUILTIN, ledState);    // toggle LED to signal that App is running
 
-
-
+    
     #if WORK_WITH_WATCHDOG == 1
-      //SAMCrashMonitor::iAmAlive();
+      wdt.feed();
     #endif
     
     
@@ -986,7 +1036,7 @@ az_http_status_code insertTableEntity(CloudStorageAccount *pAccountPtr, const ch
   TableClient table(pAccountPtr, (TRANSPORT_PROTOCOL == 0) ? Protocol::useHttp : Protocol::useHttps, TAs[(size_t)TAs_NUM], (size_t)TAs_NUM, &client, &sslClient, &httpClient);
 
   #if WORK_WITH_WATCHDOG == 1
-      //SAMCrashMonitor::iAmAlive();
+      wdt.feed();
   #endif
   
   DateTime responseHeaderDateTime = DateTime();   // Will be filled with DateTime value of the response from Azure Service
@@ -995,7 +1045,7 @@ az_http_status_code insertTableEntity(CloudStorageAccount *pAccountPtr, const ch
   az_http_status_code statusCode = table.InsertTableEntity(pTableName, pTableEntity, (char *)outInsertETag, &responseHeaderDateTime, ContType::contApplicationIatomIxml, AcceptType::acceptApplicationIjson, ResponseType::dont_returnContent, false);
   
   #if WORK_WITH_WATCHDOG == 1
-      //SAMCrashMonitor::iAmAlive();
+      wdt.feed();
   #endif
 
   lastResetCause = 0;
@@ -1035,27 +1085,20 @@ az_http_status_code insertTableEntity(CloudStorageAccount *pAccountPtr, const ch
     
     Serial.println(F("InsertRequest: failed ******************"));
     
-    #if REBOOT_AFTER_FAILED_UPLOAD == 1   // When selected in config.h -> Reboot through SystemReset after failed uoload
+    #if REBOOT_AFTER_FAILED_UPLOAD == 1   // When selected in config.h -> Reboot through SystemReset after second failed upload
 
-        #if TRANSPORT_PROTOCOL == 1
           //https://forum.pjrc.com/threads/59935-Reboot-Teensy-programmatically?p=232143&viewfull=1#post232143
 
-            // Reset Teensy 4.1
-           SCB_AIRCR = 0x05FA0004;
-          
-        #endif
-        #if TRANSPORT_PROTOCOL == 0     // for http requests reboot after the second, not the first, failed request
           if(failedUploadCounter > 1)
           {
             // Reset Teensy 4.1
             SCB_AIRCR = 0x05FA0004;        
           }
-        #endif
-
+       
     #endif
     
     #if WORK_WITH_WATCHDOG == 1
-      //SAMCrashMonitor::iAmAlive();   
+      wdt.feed();  
     #endif
 
     delay(1000);
@@ -1079,7 +1122,7 @@ az_http_status_code createTable(CloudStorageAccount *pAccountPtr, const char * p
   #endif
   
   #if WORK_WITH_WATCHDOG == 1
-      //SAMCrashMonitor::iAmAlive();
+      wdt.feed();
   #endif
   
   TableClient table(pAccountPtr, Protocol::useHttps, TAs[(size_t)TAs_NUM], (size_t)TAs_NUM, &client, &sslClient, &httpClient);
@@ -1093,7 +1136,7 @@ az_http_status_code createTable(CloudStorageAccount *pAccountPtr, const char * p
   if ((statusCode == AZ_HTTP_STATUS_CODE_CONFLICT) || (statusCode == AZ_HTTP_STATUS_CODE_CREATED))
   {
     #if WORK_WITH_WATCHDOG == 1
-      //SAMCrashMonitor::iAmAlive();
+      wdt.feed();
     #endif
 
     Serial.println("Table is availabel");   

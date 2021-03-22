@@ -62,10 +62,10 @@
 
 #define ANALOG_SENSOR_READ_INTERVAL_SECONDS 2   // Analog sensors are read with this interval  (limited 1 to 14400)                                    
 
-#define WORK_WITH_WATCHDOG 0               // 1 = yes, 0 = no, Watchdog is used (1) or not used (0) (not yet accomplished for Teensy)
+#define WORK_WITH_WATCHDOG 1               // 1 = yes, 0 = no, Watchdog is used (1) or not used (0) (not yet accomplished for Teensy)
                                            // Watchdog doesn't work with Ethernet
 
-#define REBOOT_AFTER_FAILED_UPLOAD 0         // 1 = yes, 0 = no, (not yet accomplished for Teensy)
+#define REBOOT_AFTER_FAILED_UPLOAD 1         // 1 = yes, 0 = no, (not yet accomplished for Teensy)
                                              //  
 
 
@@ -101,7 +101,7 @@
                                         // Not sure if it works with other values than 999.9
 
 #define USE_SIMULATED_SENSORVALUES      // Activates simulated sensor values (sinus curve) or (test values)
-//#define USE_TEST_VALUES               // Activates sending of test values (see Code in main.cpp)
+#define USE_TEST_VALUES               // Activates sending of test values (see Code in main.cpp)
                                         // if activated we select test values, not sinus curves
 
 #define SENSOR_1_OFFSET     0.0        // Calibration Offset to sensor No 1
