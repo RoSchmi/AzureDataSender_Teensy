@@ -3,7 +3,7 @@
 Sending Sensor Data to Azure Storage Tables using Board Teensy 4.1.
 Works with http- and https- transmission, isn't yet tested over longer time periods
 
-For details about the functions of this app how to use it have a look on this project
+For details about the functions of this app and how to use and apply settings have a look on this similar project
 
 https://www.hackster.io/RoSchmi/wio-terminal-app-sending-sensor-data-to-azure-storage-tables-dbb08e
 
