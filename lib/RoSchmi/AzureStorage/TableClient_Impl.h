@@ -156,29 +156,21 @@ AcceptType pAcceptType, ResponseType pResponseType, bool useSharedKeyLite)
   az_span responseTypeAzSpan = getResponseType_az_span(pResponseType);
   az_span acceptTypeAzSpan = getAcceptType_az_span(pAcceptType);
 
-    const char * li1 = "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>";
-    const char * li2 = "<entry xmlns:d=\"http://schemas.microsoft.com/ado/2007/08/dataservices\"  ";
-    const char * li3 = "xmlns:m=\"http://schemas.microsoft.com/ado/2007/08/dataservices/metadata\" ";
-    const char * li4 = "xmlns=\"http://www.w3.org/2005/Atom\"> <id>http://";
+    const __FlashStringHelper * li1 = (F("<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>"));
+    const __FlashStringHelper * li2 = (F("<entry xmlns:d=\"http://schemas.microsoft.com/ado/2007/08/dataservices\"  "));
+    const __FlashStringHelper * li3 = (F("xmlns:m=\"http://schemas.microsoft.com/ado/2007/08/dataservices/metadata\" "));
+    const __FlashStringHelper * li4 = (F("xmlns=\"http://www.w3.org/2005/Atom\"> <id>http://"));
           char * li5 = (char *)_accountPtr->AccountName.c_str();
-    const char * li6 = ".table.core.windows.net/Tables('";
+    const __FlashStringHelper * li6 = (F(".table.core.windows.net/Tables('"));
           char * li7 = (char *)validTableName;
-    const char * li8 = "')</id><title /><updated>";
+    const __FlashStringHelper * li8 = (F("')</id><title /><updated>"));
           char * li9 = (char *)timestampUTC.c_str();
-    const char * li10 = "</updated><author><name/></author> ";
-    const char * li11 = "<content type=\"application/xml\"><m:properties><d:TableName>";
+    const __FlashStringHelper * li10 = (F("</updated><author><name/></author> "));
+    const __FlashStringHelper * li11 = (F("<content type=\"application/xml\"><m:properties><d:TableName>"));
           char * li12 = (char *)validTableName;
-    const char * li13 = "</d:TableName></m:properties></content></entry>";
-           
-  // Create the body of the request
-   // To save memory for heap, allocate buffer which can hold 900 bytes at adr 0x20029200
-   /*
-   uint8_t addBuffer[1];
-   uint8_t * addBufAddress = (uint8_t *)addBuffer;
-   addBufAddress = (uint8_t *)REQUEST_BODY_BUFFER_MEMORY_ADDR;
-   */
+    const __FlashStringHelper * li13 = (F("</d:TableName></m:properties></content></entry>"));
 
-   uint8_t addBuffer[REQUEST_BODY_BUFFER_LENGTH] {0};
+  uint8_t addBuffer[REQUEST_BODY_BUFFER_LENGTH] {0};
   uint8_t * addBufAddress = (uint8_t *)addBuffer;
 
    az_span startContent_to_upload = az_span_create(addBufAddress, REQUEST_BODY_BUFFER_LENGTH);

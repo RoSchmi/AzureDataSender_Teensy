@@ -22,8 +22,8 @@
 // The credentials of your WiFi router (if needed) and the name and key of your
 // Azure Storage Account have to be set in the file config_secret.h 
 
-#define SENDINTERVAL_MINUTES   10              // Sendinterval in minutes, in this interval data are sent to the Cloud                                       
-                                              // is limited to be not below 1 second
+#define SENDINTERVAL_MINUTES     2.0               // Sendinterval in minutes (10 is recommended), in this interval                                        
+                                                   // data are sent to the Cloud (is limited to be not below 1 second)
 
 // Names for Tables in Azure Account, please obey rules for Azure Tablenames (e.g. no underscore allowed)
 // regular expression "^[A-Za-z][A-Za-z0-9]{2,62}$".
@@ -62,13 +62,12 @@
 
 #define ANALOG_SENSOR_READ_INTERVAL_SECONDS 2   // Analog sensors are read with this interval  (limited 1 to 14400)                                    
 
-#define WORK_WITH_WATCHDOG 0               // 1 = yes, 0 = no, Watchdog is used (1) or not used (0) (not yet accomplished for Teensy)
-                                           // Watchdog doesn't work with Ethernet
-
-#define REBOOT_AFTER_FAILED_UPLOAD 0         // 1 = yes, 0 = no, (not yet accomplished for Teensy)
-                                             //  
-
-
+#define WORK_WITH_WATCHDOG 0               // 1 = yes, 0 = no, Watchdog is used (1) or not used (0)
+                                           // should be 1 for normal operation and 0 for testing
+                                           
+#define REBOOT_AFTER_FAILED_UPLOAD 0       // 1 = yes, 0 = no
+                                           // should be 1 for normal operation and 0 for testing
+                                            
 // Set timezoneoffset and daylightsavingtime settings according to your zone
 // https://en.wikipedia.org/wiki/Daylight_saving_time_by_country
 // https://en.wikipedia.org/wiki/List_of_time_zone_abbreviations
@@ -101,7 +100,7 @@
                                         // Not sure if it works with other values than 999.9
 
 #define USE_SIMULATED_SENSORVALUES      // Activates simulated sensor values (sinus curve) or (test values)
-#define USE_TEST_VALUES                 // Activates sending of test values (see Code in main.cpp)
+//#define USE_TEST_VALUES                 // Activates sending of test values, e.g. counter or last reset cause (see Code in main.cpp)
                                         // if activated we select test values, not sinus curves
 
 #define SENSOR_1_OFFSET     0.0        // Calibration Offset to sensor No 1

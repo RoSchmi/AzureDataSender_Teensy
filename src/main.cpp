@@ -1109,7 +1109,7 @@ az_http_status_code createTable(CloudStorageAccount *pAccountPtr, const char * p
       wdt.feed();
     #endif
 
-    Serial.println("Table is availabel");   
+    Serial.println("Table is available");   
   }
   else
   {
