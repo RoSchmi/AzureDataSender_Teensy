@@ -19,8 +19,11 @@ There are two hacks which are needed to achieve that this application works on t
    
    Then in the FNET library the file fnet_dns.c has to be altered. Otherwise DNS resolving of the Azure Storage url doesn't work.
    Go to  FNET/src/service/dns/fnet_dns.c and comment the line
+   
    //'if(_fnet_dns_cmp_name(rr_name, dns_if->host_name) == FNET_TRUE)'
+   
    // {
+   
    and the corresponding closing brace
 
    or use (already selected in platformio.ini)
