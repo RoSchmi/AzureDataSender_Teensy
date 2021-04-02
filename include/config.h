@@ -3,14 +3,14 @@
 #ifndef _CONFIG_H
 #define _CONFIG_H
 
-// This file is for not secret user specific configurations
+// This file is for 'not secret' user specific configurations
 //
 // Please set your timezone offset (time difference from your zone 
 // to UTC time in units of minutes) and set the time difference
 // used for DaylightSaving Time in minutes
 // Define begin and end of Daylightsaving 
 //
-// Please select the transport protocol, http or https (recommended)
+// Please select the transport protocol, http or https (https is recommended)
 // For https you must include the Root Certificate of your Azure Account
 // like here the baltimore_root_ca
 // Select the Sendinterval in minutes
@@ -19,11 +19,14 @@
 // Define other settings according to your needs
 
 //
-// The credentials of your WiFi router (if needed) and the name and key of your
+// The credentials of your WiFi router (not needed for Teensy 4.1) and the name and key of your
 // Azure Storage Account have to be set in the file config_secret.h 
 
-#define SENDINTERVAL_MINUTES     2.0               // Sendinterval in minutes (10 is recommended), in this interval                                        
+#define SENDINTERVAL_MINUTES   5.0           // Sendinterval in minutes (10 is recommended), in this interval                                        
                                                    // data are sent to the Cloud (is limited to be not below 1 second)
+
+#define SERIAL_PRINT 1                      // 1 = yes, 0 = no. Select if Serial.print messages are printed 
+                                           
 
 // Names for Tables in Azure Account, please obey rules for Azure Tablenames (e.g. no underscore allowed)
 // regular expression "^[A-Za-z][A-Za-z0-9]{2,62}$".
@@ -43,17 +46,12 @@
 
 #define ON_OFF_TABLE_PART_PREFIX "Y3_"           // Prefix for PartitionKey of On/Off Tables (default, only change if needed)
 
-#define ANALOG_SENSOR_01_LABEL "Temperature"    // Labels for sensors to be displayed on Wio Terminal screen (length max 13)
-#define ANALOG_SENSOR_02_LABEL "Humidity"       
-#define ANALOG_SENSOR_03_LABEL "Light"
-#define ANALOG_SENSOR_04_LABEL "Movement"
-
 #define INVALIDATEINTERVAL_MINUTES 10      // Invalidateinterval in minutes 
                                            // (limited to values between 1 - 60)
                                            // (Sensor readings are considered to be invalid if not successsfully
                                            // read within this timespan)
 
-#define NTP_UPDATE_INTERVAL_MINUTES 10      //  With this interval sytem time is updated via NTP
+#define NTP_UPDATE_INTERVAL_MINUTES 20      //  With this interval sytem time is updated via NTP
                                            //  with internet time (is limited to be not below 1 min)
 
 #define UPDATE_TIME_FROM_AZURE_RESPONSE 1  // 1 = yes, 0 = no. SystemTime is updated from the Post response from Azure.
@@ -62,7 +60,7 @@
 
 #define ANALOG_SENSOR_READ_INTERVAL_SECONDS 2   // Analog sensors are read with this interval  (limited 1 to 14400)                                    
 
-#define WORK_WITH_WATCHDOG 0               // 1 = yes, 0 = no, Watchdog is used (1) or not used (0)
+#define WORK_WITH_WATCHDOG 1             // 1 = yes, 0 = no, Watchdog is used (1) or not used (0)
                                            // should be 1 for normal operation and 0 for testing
                                            
 #define REBOOT_AFTER_FAILED_UPLOAD 0       // 1 = yes, 0 = no

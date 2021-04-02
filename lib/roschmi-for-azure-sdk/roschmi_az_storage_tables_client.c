@@ -298,9 +298,9 @@ _az_RETURN_IF_FAILED(
 //_az_RETURN_IF_FAILED(az_http_request_append_header(
 //      &request, AZ_STORAGE_TABLES_HEADER_EXPECT_TYPE, AZ_STORAGE_TABLES_HEADER_EXPECT_100_CONTINUE));    
     
-// Add connection Close header
-// _az_RETURN_IF_FAILED(
-//      az_http_request_append_header(&request, AZ_HTTP_HEADER_CONNECTION, AZ_HTTP_CONNECTION_CLOSE));
+//Add connection Close header
+//_az_RETURN_IF_FAILED(
+//     az_http_request_append_header(&request, AZ_HTTP_HEADER_CONNECTION, AZ_HTTP_CONNECTION_CLOSE));
 
   uint8_t content_length[_az_INT64_AS_STR_BUFFER_SIZE] = { 0 };
   az_span content_length_span = AZ_SPAN_FROM_BUFFER(content_length);

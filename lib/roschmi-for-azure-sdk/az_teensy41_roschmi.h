@@ -18,6 +18,8 @@
 
 #include "EthernetWebServer_SSL.h"
 
+#include "Watchdog_t4.h"
+
 #define MAX_HEADERNAME_LENGTH 30
 #define MAX_HEADERVALUE_LENGTH 120
 

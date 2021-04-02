@@ -119,6 +119,7 @@ az_http_client_send_request(az_http_request const* request, az_http_response* re
   uint16_t port = (strcmp(protocol, (const char *)"http") == 0) ? 80 : 443;
 
   httpClient->connectionKeepAlive();
+  
   httpClient->noDefaultRequestHeaders();
   
   /*
@@ -136,7 +137,14 @@ az_http_client_send_request(az_http_request const* request, az_http_response* re
      }
      else
      {       
-       delay(500); 
+        
+        #if WORK_WITH_WATCHDOG == 1
+          //wdt.feed();
+          delay(500);
+          //wdt.feed();
+        #else
+          delay(500);
+        #endif
      }
   }
   
@@ -196,7 +204,15 @@ az_http_client_send_request(az_http_request const* request, az_http_response* re
 
       int httpCode = -1;
 
+      #if WORK_WITH_WATCHDOG == 1
+        //wdt.feed();         
+      #endif
+      
       httpCode = httpClient->responseStatusCode();
+
+      #if WORK_WITH_WATCHDOG == 1
+        //wdt.feed();         
+      #endif
        
         char httpStatusLine[40] {0};
         if (httpCode > 0)  // Request was successful
@@ -204,8 +220,10 @@ az_http_client_send_request(az_http_request const* request, az_http_response* re
           
           sprintf((char *)httpStatusLine, "%s%i%s", "HTTP/1.1 ", httpCode, " ***\r\n");
          __unused az_result appendResult = az_http_response_append(ref_response, az_span_create_from_str((char *)httpStatusLine));
-
+          
+          #if SERIAL_PRINT == 1
           Serial.println(httpStatusLine);
+          #endif
 
           uint32_t start = millis();
 

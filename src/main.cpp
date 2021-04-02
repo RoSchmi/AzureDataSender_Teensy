@@ -7,20 +7,31 @@
 // Replace the Stream.h file in  C:/Users/thisUser/.platformio/packages/framework-arduinoteensy/cores/teensy4/Stream.h
 // with the custom version found in lib/RoSchmi/Stream 
 
-// Cave for !!!!!
-// Go to C:\Users\thisuser\.platformio\packages\framework-arduinoteensy\libraries and replace the folders FNET and NativeEthernet
-// with the latest (18.03.2021) versions of -https://github.com/vjmuzik/NativeEthernet#master
+// Cave for Teensyduino 1.53 !!!!!
+// Go to C:\Users\thisuser\.platformio\packages\framework-arduinoteensy\libraries and replace the folders 
+
+// Use the FNET and NativeEthernet latest (18.03.2021) versions of
+//
+// -https://github.com/vjmuzik/NativeEthernet#master
+//
 // and -https://github.com/vjmuzik/FNET#master
-// 
-// go to  FNET/src/service/dns/fnet_dns.c and change the method 'static fnet_bool_t _fnet_dns_cmp_name(const char *rr_name, const char *name)'
-// and change the code to ignore the result of this test    
-//    if(i == name_length)
-//    { result = FNET_TRUE; }    
-//    else
-//    {
-//        result = FNET_TRUE;
-//        //result = FNET_FALSE;
-//    }
+
+// Then go to  FNET/src/service/dns/fnet_dns.c and comment the line
+// 'if(_fnet_dns_cmp_name(rr_name, dns_if->host_name) == FNET_TRUE)'
+// {
+// and the corresponding closing brace
+
+// or use
+// -https://github.com/RoSchmi/FNET#devRoSchmi
+// where these changes are already included
+
+
+// Tips for debugging
+// Main: include/config.h #define SERIAL_PRINT 1
+// FNET: 'fnet_user_config.h'
+
+// In config.h you can select that simulated sensor values are used. Comment the line
+// #define USE_SIMULATED_SENSORVALUES  in config.h if not wanted   
 
 // Special files in folder include/:
 // *********************************
@@ -148,6 +159,9 @@ unsigned int insertCounterAnalogTable = 0;
 uint32_t tryUploadCounter = 0;
 uint32_t timeNtpUpdateCounter = 0;
 volatile int32_t sysTimeNtpDelta = 0;
+
+
+//uint32_t ntpUpdateInterval = 60000;
 
 bool ledState = false;
 uint8_t lastResetCause = -1;
@@ -284,7 +298,7 @@ void setup(){
   }
 
   //Initialize OnOffSwitcher (for tests and simulation)
-  onOffSwitcherWio.begin(TimeSpan(30 * 60));   // Toggle every 30 min
+  onOffSwitcherWio.begin(TimeSpan(15 * 60));   // Toggle every 30 min
   onOffSwitcherWio.SetInactive();
   //onOffSwitcherWio.SetActive();
 
@@ -320,7 +334,7 @@ void setup(){
   #if WORK_WITH_WATCHDOG == 1
     WDT_timings_t config;
     config.trigger = 1; /* seconds before reset occurs, 0->128 */
-    config.timeout = 10; /* in seconds, 0->128 */
+    config.timeout = 30; /* in seconds, 0->128 */
     config.callback = watchDogCallback;
     wdt.begin(config);
   #endif
@@ -423,8 +437,8 @@ void setup(){
   Serial.println(Ethernet.localIP());
 
   timeClient.begin();
-  
-  timeClient.setUpdateInterval(NTP_UPDATE_INTERVAL_MINUTES * 60 * 1000);
+  timeClient.setUpdateInterval((NTP_UPDATE_INTERVAL_MINUTES < 1 ? 1 : NTP_UPDATE_INTERVAL_MINUTES) * 60 * 1000);
+  timeClient.setRetryInterval(5000);  // Try to read from NTP Server not more often than every 5 seconds
   Serial.println("Using NTP Server " + timeClient.getPoolServerName());
   
   timeClient.update();
@@ -445,7 +459,7 @@ void setup(){
   {
     while(true)
     {
-      delay(500); //Wait for ever, could not get NTP time
+      delay(500); //Wait for ever, could not get NTP time, eventually reboot by Watchdog
     }
   }
   
@@ -491,9 +505,10 @@ void loop()
       wdt.feed();
     #endif
     
-    // Update RTC from Ntp when ntpUpdateInterval has expired 
-    if (timeClient.update())    // only returns true if update interval has expired
-    {       
+      // Update RTC from Ntp when ntpUpdateInterval has expired, retry when RetryInterval has expired 
+      
+      if (timeClient.update())
+      {                                                                  
         dateTimeUTCNow = sysTime.getTime();
         uint32_t actRtcTime = dateTimeUTCNow.secondstime();       
         unsigned long utcTime = timeClient.getUTCEpochTime();  // Seconds since 1. Jan. 1970    
@@ -501,13 +516,15 @@ void loop()
         dateTimeUTCNow = sysTime.getTime();
         sysTimeNtpDelta = actRtcTime - dateTimeUTCNow.secondstime();
         timeNtpUpdateCounter++;
-        Serial.println(F("NTP-Time was updated"));
-        char buffer[] = "NTP-Utc: YYYY-MM-DD hh:mm:ss";           
-        dateTimeUTCNow.toString(buffer);
-        Serial.println(buffer);       
-    }
-    else            // it was not NTP Update, proceed with send to analog table or On/Off-table
-    {
+
+        #if SERIAL_PRINT == 1
+          // Indicate that NTP time was updated         
+          char buffer[] = "NTP-Utc: YYYY-MM-DD hh:mm:ss";           
+          dateTimeUTCNow.toString(buffer);
+          Serial.println(buffer);
+        #endif
+      }  // End NTP stuff
+       
       dateTimeUTCNow = sysTime.getTime();
       
       // Get offset in minutes between UTC and local time with consideration of DST
@@ -608,9 +625,11 @@ void loop()
   
           // Create TableEntity consisting of PartitionKey, RowKey and the properties named 'SampleTime', 'T_1', 'T_2', 'T_3' and 'T_4'
           AnalogTableEntity analogTableEntity(partitionKey, rowKey, az_span_create_from_str((char *)sampleTime),  AnalogPropertiesArray, analogPropertyCount);
-           
+          
+          #if SERIAL_PRINT == 1
           sprintf(strData, "   Trying to insert %u", insertCounterAnalogTable);
-          Serial.println(strData);  
+          Serial.println(strData);
+          #endif  
              
           // Keep track of tries to insert and check for memory leak
           insertCounterAnalogTable++;
@@ -622,7 +641,7 @@ void loop()
           __unused az_http_status_code insertResult =  insertTableEntity(myCloudStorageAccountPtr, (char *)augmentedAnalogTableName.c_str(), analogTableEntity, (char *)EtagBuffer);
                  
         }
-        else     // Task to do was not NTP and not send analog table, so it is Send On/Off values or End of day stuff?
+        else     // Task to do was not send analog table, so it is Send On/Off values or End of day stuff?
         {
         
           OnOffSampleValueSet onOffValueSet = onOffDataContainer.GetOnOffValueSet();
@@ -741,7 +760,7 @@ void loop()
           
         } 
       }    
-    } 
+     
   }
 }         // End loop
 
@@ -942,9 +961,34 @@ float ReadAnalogSensor(int pSensorIndex)
             { frequDeterminer = 16; y_offset = 30; }
              
             int secondsOnDayElapsed = dateTimeUTCNow.second() + dateTimeUTCNow.minute() * 60 + dateTimeUTCNow.hour() *60 *60;
-                    
-            return roundf((float)25.0 * (float)sin(PI / 2.0 + (secondsOnDayElapsed * ((frequDeterminer * PI) / (float)86400)))) / 10  + y_offset;          
 
+            // RoSchmi
+            switch (pSensorIndex)
+            {
+              case 3:
+              {
+                return lastResetCause;
+              }
+              break;
+            
+              case 2:
+              { 
+                uint32_t showInsertCounter = insertCounterAnalogTable % 50;               
+                double theRead = ((double)showInsertCounter) / 10;
+                return theRead;
+              }
+              break;
+              case 0:
+              case 1:
+              {
+                return roundf((float)25.0 * (float)sin(PI / 2.0 + (secondsOnDayElapsed * ((frequDeterminer * PI) / (float)86400)))) / 10  + y_offset;          
+              }
+              break;
+              default:
+              {
+                return 0;
+              }
+            }
   #endif
 }
 
@@ -1027,22 +1071,26 @@ az_http_status_code insertTableEntity(CloudStorageAccount *pAccountPtr, const ch
   if ((statusCode == AZ_HTTP_STATUS_CODE_NO_CONTENT) || (statusCode == AZ_HTTP_STATUS_CODE_CREATED))
   {
     sendResultState = true;
-
+    
+    #if SERIAL_PRINT == 1
     Serial.println(F("InsertRequest: Entity was inserted"));
+    #endif
     
     #if UPDATE_TIME_FROM_AZURE_RESPONSE == 1    // System time shall be updated from the DateTime value of the response ?
     
-    dateTimeUTCNow = sysTime.getTime();    
-    uint32_t actRtcTime = dateTimeUTCNow.secondstime();
-    dateTimeUTCNow = responseHeaderDateTime;                    // Get new time from the response
-    unsigned long utcTime = timeClient.getUTCEpochTime();                     // Seconds since 1. Jan. 1970
-    sysTime.setTime(utcTime + SECONDS_FROM_1970_TO_2000);       // actualize SystemTime (RTC)
-    dateTimeUTCNow = sysTime.getTime();                         // actualize variable 'dateTimeUTCNow' from RTC
-    sysTimeNtpDelta = actRtcTime - dateTimeUTCNow.secondstime();// calculate the time deviation since the last actualization
-    char buffer[] = "Azure-Utc: YYYY-MM-DD hh:mm:ss";
-    dateTimeUTCNow.toString(buffer);
-    Serial.println(buffer);
-    
+      dateTimeUTCNow = sysTime.getTime();    
+      uint32_t actRtcTime = dateTimeUTCNow.secondstime();
+      dateTimeUTCNow = responseHeaderDateTime;                    // Get new time from the response
+      unsigned long utcTime = timeClient.getUTCEpochTime();                     // Seconds since 1. Jan. 1970
+      sysTime.setTime(utcTime + SECONDS_FROM_1970_TO_2000);       // actualize SystemTime (RTC)
+      dateTimeUTCNow = sysTime.getTime();                         // actualize variable 'dateTimeUTCNow' from RTC
+      sysTimeNtpDelta = actRtcTime - dateTimeUTCNow.secondstime();// calculate the time deviation since the last actualization
+
+      #if SERIAL_PRINT == 1
+      char buffer[] = "Azure-Utc: YYYY-MM-DD hh:mm:ss";
+      dateTimeUTCNow.toString(buffer);
+      Serial.println(buffer);
+      #endif   
     #endif
   }
   else            // request failed
@@ -1078,7 +1126,9 @@ az_http_status_code insertTableEntity(CloudStorageAccount *pAccountPtr, const ch
 
 az_http_status_code createTable(CloudStorageAccount *pAccountPtr, const char * pTableName)
 { 
+  #if SERIAL_PRINT == 1
   Serial.println("Trying to create Table");
+  #endif
 
   static EthernetClient  client;
   
@@ -1108,8 +1158,10 @@ az_http_status_code createTable(CloudStorageAccount *pAccountPtr, const char * p
     #if WORK_WITH_WATCHDOG == 1
       wdt.feed();
     #endif
-
-    Serial.println("Table is available");   
+    
+    #if SERIAL_PRINT == 1
+    Serial.println("Table is available");
+    #endif   
   }
   else
   {
