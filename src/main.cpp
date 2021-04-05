@@ -438,7 +438,8 @@ void setup(){
 
   timeClient.begin();
   timeClient.setUpdateInterval((NTP_UPDATE_INTERVAL_MINUTES < 1 ? 1 : NTP_UPDATE_INTERVAL_MINUTES) * 60 * 1000);
-  timeClient.setRetryInterval(5000);  // Try to read from NTP Server not more often than every 5 seconds
+  // 'setRetryInterval' should not be too short, may be that short intervals lead to malfunction 
+  timeClient.setRetryInterval(20000);  // Try to read from NTP Server not more often than every 20 seconds
   Serial.println("Using NTP Server " + timeClient.getPoolServerName());
   
   timeClient.update();
