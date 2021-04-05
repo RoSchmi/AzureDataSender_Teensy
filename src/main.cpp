@@ -8,7 +8,8 @@
 // with the custom version found in lib/RoSchmi/Stream 
 
 // Cave for Teensyduino 1.53 !!!!!
-// Go to C:\Users\thisuser\.platformio\packages\framework-arduinoteensy\libraries and replace the folders 
+// Replace the libraries 'NativeEthernet' and 'FNET' of Teensyduino 1.5.3
+// Location C:\Users\thisuser\.platformio\packages\framework-arduinoteensy\libraries 
 
 // Use the FNET and NativeEthernet latest (18.03.2021) versions of
 //
@@ -16,8 +17,10 @@
 //
 // and -https://github.com/vjmuzik/FNET#master
 
-// Then go to  FNET/src/service/dns/fnet_dns.c and comment the line
-// 'if(_fnet_dns_cmp_name(rr_name, dns_if->host_name) == FNET_TRUE)'
+// include these libraries in platformio.ini lib_deps = .....
+
+// Then go to  .pio/libdeps/teensy41/FNET/src/service/dns/fnet_dns.c and comment the line
+// if(_fnet_dns_cmp_name(rr_name, dns_if->host_name) == FNET_TRUE)
 // {
 // and the corresponding closing brace
 
