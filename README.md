@@ -1,7 +1,7 @@
 # AzureDataSender_Teensy
 
 Sending Sensor Data to Azure Storage Tables using Teensy 4.1.
-Works with http- and https- transmission, isn't yet tested over longer time periods
+Works with http- and https- transmission.
 
 For details about the functions of this app and how to use and apply settings have a look on this similar project
 
