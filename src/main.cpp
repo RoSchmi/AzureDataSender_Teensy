@@ -85,6 +85,7 @@
 #include "OnOffTableEntity.h"
 
 #include "NTPClient_Generic.h"
+#include "Timezone_Generic.h"
 
 #include <NativeEthernet.h>
 #include "EthernetHttpClient_SSL.h"
