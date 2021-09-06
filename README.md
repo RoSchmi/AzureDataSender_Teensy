@@ -7,6 +7,11 @@ For details about the functions of this app and how to use and apply settings ha
 
 https://www.hackster.io/RoSchmi/wio-terminal-app-sending-sensor-data-to-azure-storage-tables-dbb08e
 
+In this Repo the NativeEthernet and FNET libraries are used.
+There is a new version available which uses the 'QnEthernet' library
+
+https://github.com/RoSchmi/AzureDataSender_Teensy_QnEthernet
+
 ### Patches for Teensy 4.1 board
 There is a hack needed to achieve that this application works on the Teensy 4.1:
 1) The used Stream.h header file has to be changed:
