@@ -11,23 +11,13 @@
 // Replace the libraries 'NativeEthernet' and 'FNET' of Teensyduino 1.5.3
 // Location C:\Users\thisuser\.platformio\packages\framework-arduinoteensy\libraries 
 
-// Use the FNET and NativeEthernet latest (18.03.2021) versions of
+// Use the FNET and NativeEthernet latest (03.09.2021) versions of
 //
 // -https://github.com/vjmuzik/NativeEthernet#master
 //
 // and -https://github.com/vjmuzik/FNET#master
 
 // include these libraries in platformio.ini lib_deps = .....
-
-// Then go to  .pio/libdeps/teensy41/FNET/src/service/dns/fnet_dns.c and comment the line
-// if(_fnet_dns_cmp_name(rr_name, dns_if->host_name) == FNET_TRUE)
-// {
-// and the corresponding closing brace
-
-// or use
-// -https://github.com/RoSchmi/FNET#devRoSchmi
-// where these changes are already included
-
 
 // Tips for debugging
 // Main: include/config.h #define SERIAL_PRINT 1
